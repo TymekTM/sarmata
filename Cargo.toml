@@ -1,0 +1,7 @@
+[package]
+name = "sarmata"
+version = "0.1.0"
+edition = "2024"
+description = "Język programowania stylizowany na polszczyznę XVI wieku, z własnym kompilatorem"
+
+[dependencies]
