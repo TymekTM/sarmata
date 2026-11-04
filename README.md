@@ -41,6 +41,11 @@ z `przyklady/` i porównuje wynik z plikiem `.oczekiwane`).
 
 ## Statut, czyli gramatyka
 
+Piszesz po angielsku albo w Pythonie i nie wiesz, jak coś powiedzieć po sarmacku? Zajrzyj do
+[rozmówek](docs/rozmowki.md): tam każde `print`, `for`, `try` i `dict` ma swój sarmacki odpowiednik,
+wszystkie synonimy słów skryby i lista wypełniaczy, które skryba pomija. Pełny opis języka
+jest w [statucie](docs/statut.md).
+
 ### Pisownia
 
 Pisać można po staremu albo po nowemu, skrybie to jedno. Przed porównaniem każde słowo jest

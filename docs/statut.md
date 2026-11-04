@@ -3,6 +3,8 @@
 Pełny opis języka: najpierw krótki kurs, potem ścisła ściąga i lista pułapek.
 Jeśli piszesz w Sarmacie po raz pierwszy, przeczytaj całość. Jeśli wracasz, zajrzyj
 do [ściągi](#8-ściąga) i [pułapek](#9-pułapki).
+Jeśli myślisz po angielsku albo w Pythonie, tłumaczenia pojęć i wszystkie synonimy słów
+skryby znajdziesz w [rozmówkach](rozmowki.md).
 
 Spis treści:
 1. [Pierwszy program](#1-pierwszy-program)
