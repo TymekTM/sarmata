@@ -1210,7 +1210,7 @@ impl Parser {
         match t.kw {
             Some(Kw::Jesli) => {
                 self.pos += 1;
-                let cond = self.parse_expr()?;
+                let cond = self.parse_cond()?;
                 let (body, block) = self.parse_body()?;
                 let mut stmt = Stmt::If(vec![(cond, body)], None, line);
                 let block = if block {
@@ -1222,7 +1222,7 @@ impl Parser {
             }
             Some(Kw::Poki) => {
                 self.pos += 1;
-                let cond = self.parse_expr()?;
+                let cond = self.parse_cond()?;
                 self.eat_p(",");
                 self.eat_kw(Kw::Czyn);
                 let (body, block) = self.loop_body()?;
@@ -1277,6 +1277,36 @@ impl Parser {
     }
 
     /// Dalsze „a jeśli …” i „inaczej …” — w tym samym zdaniu albo w następnym.
+    /// Warunek w nagłówku: tu „a” (też „, a”) znaczy „i” — „Ieśli belka iest spisem,
+    /// a belka nie iest pusta”. Poza nagłówkami „a” zaczyna nowy rozkaz.
+    fn parse_cond(&mut self) -> R<Expr> {
+        let mut cond = self.parse_expr()?;
+        // „Ieśli x iest większe niż trzy, a mnieysze niż dziesięć”
+        let subject = subject_of(&cond);
+        loop {
+            let save = self.pos;
+            let line = self.line();
+            self.eat_p(",");
+            if self.norm_at(0) != "a"
+                || self.is_elif_start()
+                || self.is_else_start()
+                || self.is_catch_start()
+                || !(self.starts_operand(self.pos + 1) || self.is_cmp_tail(1))
+                || self.starts_verb(self.pos + 1)
+                || self.starts_simple(self.pos + 1)
+            {
+                self.pos = save;
+                return Ok(cond);
+            }
+            self.pos += 1;
+            let next = match &subject {
+                Some(l) if self.starts_bare_cmp() => self.parse_cmp_with(l.clone())?,
+                _ => self.parse_expr()?,
+            };
+            cond = Expr::And(Box::new(cond), Box::new(next), line);
+        }
+    }
+
     fn parse_if_tail(&mut self, stmt: &mut Stmt, same_sentence: bool) -> R<bool> {
         let Stmt::If(arms, els, _) = stmt else {
             unreachable!()
@@ -1303,7 +1333,7 @@ impl Parser {
                 };
                 let cond = match subject {
                     Some(l) => self.parse_cmp_with(l)?,
-                    None => self.parse_expr()?,
+                    None => self.parse_cond()?,
                 };
                 let (body, block) = self.parse_body()?;
                 arms.push((cond, body));
@@ -1551,6 +1581,9 @@ impl Parser {
                         vec![path],
                         line,
                     )));
+                }
+                if self.is_kw(Kw::Element) && matches!(self.kw_at(1), Some(Kw::Ordinal(_))) {
+                    self.pos += 1;
                 }
                 let index = match self.peek().kw {
                     Some(Kw::Ordinal(n)) => {
@@ -2490,6 +2523,10 @@ impl Parser {
                 }
                 Kw::Element => {
                     self.pos += 1;
+                    // „element drugi z ocen” — to samo, co „drugi element ocen”
+                    if matches!(self.peek().kw, Some(Kw::Ordinal(_))) {
+                        return self.parse_primary();
+                    }
                     let idx = self.parse_add()?;
                     let _ = self.eat_kw(Kw::Z) || self.eat_kw(Kw::W);
                     let coll = self.parse_postfix()?;

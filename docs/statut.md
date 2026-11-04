@@ -274,7 +274,7 @@ Indeksuje się **od jedynki**:
 ```
 element trzy z ocen
 element numer ocen
-pierwszy element ocen
+pierwszy element ocen        element pierwszy z ocen
 drugi element ocen
 ostatni element ocen
 długość ocen
@@ -466,6 +466,7 @@ Zakończ program z kodem dwa.
 | `x iest pusty` | puste pismo albo regestr |
 | `zbiór zawiera x`, `x iest w zbiorze` | zawieranie (regestr albo fragment pisma) |
 | `a i b`, `a oraz b`, `a albo b`, `a lub b`, `nie a` | logika |
+| `Ieśli x iest większe niż trzy, a mnieysze niż dziesięć: …` | w nagłówku `Ieśli`/`Póki` „a” znaczy „i” |
 
 Słowa *większy, mniejszy, równy, parzysty…* działają w każdym rodzaju i przypadku
 (*większa, większe, równej…*). Pisma porównuje się alfabetycznie, bajt po bajcie.
