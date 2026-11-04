@@ -2,7 +2,7 @@
 
 Pełny opis języka: najpierw krótki kurs, potem ścisła ściąga i lista pułapek.
 Jeśli piszesz w Sarmacie po raz pierwszy, przeczytaj całość. Jeśli wracasz, zajrzyj
-do [ściągi](#7-ściąga) i [pułapek](#8-pułapki).
+do [ściągi](#8-ściąga) i [pułapek](#9-pułapki).
 
 Spis treści:
 1. [Pierwszy program](#1-pierwszy-program)
@@ -11,10 +11,11 @@ Spis treści:
 4. [Wartości](#4-wartości)
 5. [Rozkazy](#5-rozkazy)
 6. [Uczynki, rody i księgi](#6-uczynki-rody-i-księgi)
-7. [Ściąga](#7-ściąga)
-8. [Pułapki](#8-pułapki)
-9. [Styl, czyli jak pisać kronikę, a nie kod](#9-styl-czyli-jak-pisać-kronikę-a-nie-kod)
-10. [Pełny przykład](#10-pełny-przykład)
+7. [Narzędzia skryby](#7-narzędzia-skryby)
+8. [Ściąga](#8-ściąga)
+9. [Pułapki](#9-pułapki)
+10. [Styl, czyli jak pisać kronikę, a nie kod](#10-styl-czyli-jak-pisać-kronikę-a-nie-kod)
+11. [Pełny przykład](#11-pełny-przykład)
 
 ---
 
@@ -283,6 +284,48 @@ oceny wspak
 Liczebniki porządkowe działają od *pierwszy* do *dziesiąty*, a *ostatni* oznacza ostatni
 element. Te same sposoby działają na pismach i dają pojedyncze litery.
 
+### Spisy (słowniki)
+
+```
+spis, gdzie „chleb” ma trzy, „miód” ma pięć, a „wino” ma dwanaście
+spis pusty           pusty spis           nowy spis          (też: „słownik”)
+```
+
+Kluczem może być liczba, pismo, prawda albo fałsz. Wartość czyta się słowem `pod`, a spis
+zachowuje kolejność, w jakiej klucze przybywały:
+
+```
+Obwieść ceny pod „miód”.                     (nic, jeśli klucza nie ma)
+Odtąd ceny pod „sól” iest ieden.
+Zwiększ ceny pod „chleb” o dwa.              (brakujący klucz zaczyna od zera)
+Dodaj „Kmicic” do gości pod „karczma”.       (brakujący klucz zaczyna od pustego regestru)
+Usuń „wino” z cen.
+Ieśli ceny maią „wino”: …                    (też: „ceny zawierają „wino””)
+klucze z cen          wartości z cen         długość cen
+```
+
+`Dla każdego towaru z cen` przechodzi po kluczach. Spis wypisuje się jako
+`{„chleb”: 3; „miód”: 5}`.
+
+### Regestry składane
+
+Regestr można złożyć jednym zdaniem, jak w Pythonie:
+
+```
+Niechay kwadraty będą x razy x dla każdego x od iednego do dziesięciu.
+Niechay duże będą wszystkie liczby, które są większe niż cztery.
+Niechay wybrane będą wszystkie liczby od 1 do 50, które są podzielne przez trzy i parzyste.
+Niechay mądrzy będą wszyscy z żaków, których średnia iest większa niż cztery.
+Niechay długie będą wszystkie klucze z cen, których długość iest większa niż cztery.
+Obwieść miano żaka dla każdego żaka z mądrych.
+Obwieść n plus ieden dla każdego n z liczb, które są nieparzyste.
+```
+
+- `WYRAŻENIE dla każdego MIANO od A do B` albo `… z REGESTRU` przekształca każdy element.
+- `wszystkie [MIANO] z REGESTRU` albo `wszystkie REGESTR` bierze elementy bez zmian.
+- Warunek stoi po przecinku: `które są …`, `co iest …`, `których POLE iest …`,
+  `których długość iest …` albo `gdzie WARUNEK`. Kilka warunków łączy się przez `i` albo `albo`.
+
 ---
 
 ## 5. Rozkazy
@@ -373,6 +416,41 @@ Ieśli liczba iest podzielna przez piętnaście, obwieść „FizzBuzz”,
 inaczey obwieść liczbę.
 ```
 
+### Próby i klątwy (wyjątki)
+
+```
+Uczynek dzielenie, przyimuiący licznę i mianownik:
+    Ieśli mianownik iest równy zeru:
+        Rzuć klątwę „Przez zero dzielić nie przystoi.”
+    Oddaj licznę podzieloną przez mianownik.
+
+Spróbuy:
+    Obwieść dzielenie z dziesięciu i zera.
+A w razie biedy, zwaney nieszczęściem:
+    Obwieść „Biada! Rzekli:”, nieszczęście.
+
+Spróbuy obwieść dziesiąty element ocen, a w razie biedy obwieść „nie masz tylu ocen”.
+```
+
+- `Rzuć klątwę X.` (też: `Rzuć X`, `ciśnij`, `miotnij`) przerywa bieg i leci w górę, aż ją
+  ktoś złapie. Klątwą może być każda rzecz: pismo, liczba, ród.
+- `Spróbuy:` otwiera próbę. Zaraz po niej stoi `A w razie biedy:` (też: `A ieśli bieda:`,
+  `Na wypadek klęski:`, `Biada:`). Po `zwaney`/`nazwaney` można nadać biedzie miano, a wszystko
+  między biedą a dwukropkiem jest opowieścią i skryba to pomija.
+- Próba łapie także grzechy biegu: dzielenie przez zero, element poza regestrem, zły rodzaj
+  rzeczy. Wtedy bieda jest pismem z kazaniem skryby.
+- Klątwa nie złapana kończy program: *„Klątwá nie zdięta: …”*.
+- `Oddaj`, `Przerwij` i `Pomiń` wewnątrz próby działają jak należy.
+
+### Zakończenie programu
+
+```
+Zakończ.                                     (kod wyjścia 0)
+Zakończ z kodem trzy.
+Zakończ z grzechem.                          (kod 1)
+Zakończ program z kodem dwa.
+```
+
 ### Porównania i logika
 
 | Zapis | Znaczenie |
@@ -391,6 +469,29 @@ inaczey obwieść liczbę.
 
 Słowa *większy, mniejszy, równy, parzysty…* działają w każdym rodzaju i przypadku
 (*większa, większe, równej…*). Pisma porównuje się alfabetycznie, bajt po bajcie.
+
+### Rodzaje rzeczy
+
+```
+Ieśli x iest liczbą: …                       (całkowitą albo ułamkiem)
+Ieśli x iest liczbą całkowitą: …
+Ieśli x iest ułamkiem / pismem / regestrem / spisem / nicością: …
+Ieśli x iest prawdą albo fałszem: …
+Ieśli gość iest Żakiem: …                    (ród)
+Obwieść rodzaj z x.                          (np. „liczba”, „pismo”, „Żak”)
+```
+
+### Liczby rzymskie i słowne
+
+```
+Obwieść „Anno {rok rzymskimi}”.              → Anno MDCX
+Obwieść 1999 po rzymsku.                     (też: „ciframi rzymskimi”)
+Obwieść 2026 słownie.                        → dwá tyśiące dwádźieśćiá ſześć
+```
+
+To zwykłe wyrażenia, więc działają w pojedynczym miejscu, a nie w całym programie.
+Rzymianie nie znali zera ani liczb ujemnych: zero wychodzi jako `nulla`, ujemna to grzech.
+Słowne liczby skryba umie też przeczytać z powrotem.
 
 ### Pętle
 
@@ -453,6 +554,20 @@ Niechay wiersze będą wiersze pliku „dane.txt”.
 
 Zapisanie regestru daje osobny wiersz dla każdego elementu, a zapisanie innej rzeczy
 daje jeden wiersz. `wiersze pliku` zwraca regestr pism bez znaków końca wiersza.
+
+```
+Ieśli plik „raport.txt” istnieie: …
+Ieśli plik „raport.txt” nie istnieie: …
+Usuń plik „raport.txt”.
+Utwórz katalog „kronika/rok 1610”.           (z nadrzędnymi, jak mkdir -p)
+Przenieś plik „a.txt” do „kronika/a.txt”.    (też zmienia miano)
+Obwieść zawartość katalogu „kronika”.        (regestr mian, alfabetycznie)
+```
+
+### Słowa wywołania
+
+`słowa wywołania` to regestr słów, z którymi program uruchomiono (bez miana samego
+programu). Liczby są już liczbami: `./karczma 3 piwo` daje `[3; „piwo”]`.
 
 ---
 
@@ -575,7 +690,28 @@ Przykład: `przyklady/dziennik/dziennik.sar` powołuje `przyklady/dziennik/żacy
 
 ---
 
-## 7. Ściąga
+## 7. Narzędzia skryby
+
+```sh
+sarmata przekład pismo.sar      # C zdanie po zdaniu: nad każdym przekładem stoi zdanie z pisma
+sarmata rozmowa                 # REPL: pisz zdania, skryba odpowiada
+sarmata gramatyka               # gramatyka TextMate (kolorowanie składni)
+```
+
+**Rozmowa.** Każde zdanie dopisuje się do pisma, które kompiluje się od nowa, a na ekran
+idzie tylko to, co przybyło. Blok po dwukropku kończy pusty wiersz. Zdanie, które zgrzeszy,
+przepada, a pismo zostaje, jakie było. `Amen.` albo koniec wejścia kończy rozmowę. Skoro
+całość biegnie od nowa, `losowa liczba` za każdym razem wyjdzie inna, a `Zapytaj` dostaje
+koniec wejścia.
+
+**Kolorowanie.** W `edytory/vscode/` leży rozszerzenie do VS Code. Wystarczy skopiować
+katalog do `~/.vscode/extensions/sarmata` albo uruchomić `code --install-extension` na paczce
+zrobionej przez `vsce package`. Gramatykę wywodzi się ze słownika skryby, a test pilnuje, by
+plik był aktualny.
+
+---
+
+## 8. Ściąga
 
 ```
 PROGRAM     := { powołanie } { zdanie | uczynek | ród } "Amen."
@@ -613,13 +749,21 @@ ród         := "Ród" miano ("ma" | ":") pole {("," | "i") pole} "."
 | pole | `szerokość punktu` |
 | sortowanie | `Posortuj listę według pola malejąco.` |
 | plik | `Zapisz x do pliku „a.txt”.`, `wiersze pliku „a.txt”` |
+| słownik | `spis, gdzie „a” ma 1 i „b” ma 2`, `ceny pod „a”` |
+| list comprehension | `x razy x dla każdego x z liczb, które są parzyste` |
+| filter | `wszystkie liczby, które są większe niż 3` |
+| try/catch | `Spróbuy: … / A w razie biedy, zwaney b: …` |
+| throw | `Rzuć klątwę „…”.` |
+| isinstance | `x iest liczbą`, `x iest pismem`, `x iest Żakiem` |
+| argv / exit | `słowa wywołania`, `Zakończ z kodem 2.` |
+| liczby rzymskie | `rok rzymskimi`, `suma słownie` |
 | komentarz | `Przypis: …` / `Rozdział …` na początku wiersza |
 | import | `Powołując się na „biblioteka.sar”.` |
 | koniec | `Amen.` |
 
 ---
 
-## 8. Pułapki
+## 9. Pułapki
 
 Najczęstsze błędy, zwłaszcza przy pisaniu przez model językowy:
 
@@ -632,6 +776,7 @@ Najczęstsze błędy, zwłaszcza przy pisaniu przez model językowy:
    - `pierwszy`…`dziesiąty` i `ostatni` (same, bez rzeczownika za nimi)
    - `element`, `wyraz`, `długość`, `rozmiar`, `regestr`/`rejestr`, `plik`, `wspak`
    - `prawda`, `fałsz`, `nic`, `zero` i wszystkie liczebniki słowne
+   - `pod`, `spis`/`słownik`, `bieda`/`klęska`, `wszyscy`, `próbuj`, `zakończ`
    - `gdy`, `kiedy`, `skoro`, `dalej` (to „pomiń”!), `dość`, `weź`, `pobierz`, `przyjmij`, `potem`, `następnie`
    - wszystkie wypełniacze z rozdziału 2 (`to`, `teraz`, `więc`, `też`, `jeszcze`…)
 
@@ -657,7 +802,7 @@ Najczęstsze błędy, zwłaszcza przy pisaniu przez model językowy:
 
 ---
 
-## 9. Styl, czyli jak pisać kronikę, a nie kod
+## 10. Styl, czyli jak pisać kronikę, a nie kod
 
 Skryba przyjmie i suchy, techniczny tekst, ale wtedy cały urok języka przepada.
 Sarmata ma się czytać jak kronika. Kilka zasad:
@@ -694,7 +839,7 @@ Sarmata ma się czytać jak kronika. Kilka zasad:
 
 ---
 
-## 10. Pełny przykład
+## 11. Pełny przykład
 
 Fragment `przyklady/dziennik/dziennik.sar`, typowego projektu semestralnego:
 
@@ -714,10 +859,10 @@ Uczynek utworzenie żaka z wiersza:
     Oddaj nowego Żaka o mianie pierwszym ze słów, nazwisku drugim ze słów,
         stopniach równych notom i średniey równey wyliczeniu średniey z not.
 
-Uczynek okazanie rankingu, przyimuiący spis:
-    Posortuj spis według średniey malejąco.
+Uczynek okazanie rankingu, przyimuiący listę:
+    Posortuj listę według średniey malejąco.
     Niechay mieysce będzie ieden.
-    Dla każdego żaka ze spisu:
+    Dla każdego żaka z listy:
         Obwieść „{mieysce}. {miano żaka} {nazwisko żaka} — średnia {średnia żaka}”.
         Zwiększ mieysce.
 

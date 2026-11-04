@@ -12,26 +12,51 @@
 #include <math.h>
 #include <time.h>
 #include <unistd.h>
+#include <setjmp.h>
+#include <errno.h>
+#include <dirent.h>
+#include <sys/stat.h>
 
-typedef enum { T_NIC = 0, T_LICZBA, T_ULAMEK, T_SAD, T_PISMO, T_REGESTR, T_ROD } Typ;
+typedef enum { T_NIC = 0, T_LICZBA, T_ULAMEK, T_SAD, T_PISMO, T_REGESTR, T_ROD, T_SPIS } Typ;
 
 typedef struct Pismo { size_t len; size_t zn; char d[]; } Pismo;
 typedef struct Regestr Regestr;
 typedef struct Rod Rod;
+typedef struct Spis Spis;
 typedef struct W {
     Typ t;
-    union { long long i; double f; int b; Pismo *s; Regestr *r; Rod *o; } u;
+    union { long long i; double f; int b; Pismo *s; Regestr *r; Rod *o; Spis *p; } u;
 } W;
 struct Regestr { size_t len, cap; W *el; };
 struct Rod { int rod; W *pola; };
+/* Spis: klucze w porządku wkładania, obok tablica skrótów (numery kluczy, -1 = wolne miejsce). */
+struct Spis { size_t len, cap, nidx; W *klucze, *wart; long long *idx; };
 
 #define SW_NIC ((W){0})
 
 /*@@TABLICE@@*/
 
-/* ─────────── grzechy ─────────── */
+/* ─────────── grzechy i próby ─────────── */
+
+/* Każde «Spróbuj» kładzie na stos miejsce powrotu. Grzech albo klątwa pod próbą
+ * nie zabija programu, lecz wraca do najbliższej biady z obwieszczeniem w sw_bieda. */
+static jmp_buf *sw_proby;
+static int sw_proby_n, sw_proby_cap;
+static W sw_bieda;
+
+static W sw_pismo_n(const char *s, size_t n);
 
 static void sw_grzech(int wiersz, const char *fmt, ...) {
+    if (sw_proby_n > 0) {
+        va_list ap;
+        va_start(ap, fmt);
+        char *t = NULL;
+        int n = vasprintf(&t, fmt, ap);
+        va_end(ap);
+        sw_bieda = n > 0 ? sw_pismo_n(t, (size_t)n) : sw_pismo_n("", 0);
+        free(t);
+        longjmp(sw_proby[--sw_proby_n], 1);
+    }
     fflush(stdout);
     int kolor = isatty(2);
     if (wiersz >= SW_WIERSZE_PISMA)
@@ -66,6 +91,16 @@ static void *sw_realloc(void *p, size_t n) {
     }
     return p;
 }
+
+static jmp_buf *sw_proba_wejdz(void) {
+    if (sw_proby_n == sw_proby_cap) {
+        sw_proby_cap = sw_proby_cap ? sw_proby_cap * 2 : 16;
+        sw_proby = sw_realloc(sw_proby, (size_t)sw_proby_cap * sizeof(jmp_buf));
+    }
+    return &sw_proby[sw_proby_n++];
+}
+
+static void sw_proba_wyjdz(void) { sw_proby_n--; }
 
 /* ─────────── wartości proste ─────────── */
 
@@ -129,6 +164,7 @@ static const char *sw_typ(W a) {
     case T_PISMO: return "piſmo";
     case T_REGESTR: return "regeſtr";
     case T_ROD: return sw_rod_nazwy[a.u.o->rod];
+    case T_SPIS: return "ſpis";
     }
     return "?";
 }
@@ -205,6 +241,16 @@ static void sw_fmt(Buf *b, W a, int zagniezdzone, int glebia) {
         buf_str(b, " }");
         break;
     }
+    case T_SPIS:
+        buf_str(b, "{");
+        for (size_t i = 0; i < a.u.p->len; i++) {
+            if (i) buf_str(b, "; ");
+            sw_fmt(b, a.u.p->klucze[i], 1, glebia + 1);
+            buf_str(b, ": ");
+            sw_fmt(b, a.u.p->wart[i], 1, glebia + 1);
+        }
+        buf_str(b, "}");
+        break;
     }
 }
 
@@ -248,6 +294,7 @@ static int sw_prawdziwe(W a, int L) {
     case T_PISMO: return a.u.s->len > 0;
     case T_REGESTR: return a.u.r->len > 0;
     case T_ROD: return 1;
+    case T_SPIS: return a.u.p->len > 0;
     }
     return 0;
 }
@@ -347,6 +394,8 @@ static W sw_przeciwne(W a, int L) {
 
 /* ─────────── porównania ─────────── */
 
+static long long sw_spis_szukaj(Spis *s, W k);
+
 static int sw_rowne_(W a, W b) {
     if (sw_jest_liczba(a) && sw_jest_liczba(b)) {
         if (a.t == T_LICZBA && b.t == T_LICZBA) return a.u.i == b.u.i;
@@ -364,6 +413,14 @@ static int sw_rowne_(W a, W b) {
             if (!sw_rowne_(a.u.r->el[i], b.u.r->el[i])) return 0;
         return 1;
     case T_ROD: return a.u.o == b.u.o;
+    case T_SPIS:
+        if (a.u.p == b.u.p) return 1;
+        if (a.u.p->len != b.u.p->len) return 0;
+        for (size_t i = 0; i < a.u.p->len; i++) {
+            long long j = sw_spis_szukaj(b.u.p, a.u.p->klucze[i]);
+            if (j < 0 || !sw_rowne_(a.u.p->wart[i], b.u.p->wart[j])) return 0;
+        }
+        return 1;
     default: return 0;
     }
 }
@@ -415,6 +472,7 @@ static W sw_puste(W a, int L) {
     case T_NIC: return sw_sad(1);
     case T_PISMO: return sw_sad(a.u.s->len == 0);
     case T_REGESTR: return sw_sad(a.u.r->len == 0);
+    case T_SPIS: return sw_sad(a.u.p->len == 0);
     default: sw_grzech(L, "Puſtá bywa ieno rzecz, co coś mieśći, nie %s.", sw_typ(a));
     }
     return SW_NIC;
@@ -449,9 +507,141 @@ static long long sw_indeks(W i, long long dl, int L) {
     return k - 1;
 }
 
+/* ─────────── spisy ─────────── */
+
+static unsigned long long sw_skrot(W k) {
+    unsigned long long h;
+    switch (k.t) {
+    case T_LICZBA:
+        h = (unsigned long long)k.u.i;
+        h ^= h >> 33;
+        h *= 0xff51afd7ed558ccdULL;
+        return h ^ (h >> 33);
+    case T_SAD: return k.u.b ? 0x9e3779b97f4a7c15ULL : 0x7f4a7c159e3779b9ULL;
+    case T_PISMO:
+        h = 1469598103934665603ULL;
+        for (size_t i = 0; i < k.u.s->len; i++) {
+            h ^= (unsigned char)k.u.s->d[i];
+            h *= 1099511628211ULL;
+        }
+        return h;
+    default: return 0;
+    }
+}
+
+/* Klucz zdatny do spisu; ułamek bez reszty staje się liczbą, by 2 i 2,0 trafiały w jedno. */
+static W sw_klucz(W k, int L) {
+    if (k.t == T_ULAMEK && k.u.f == floor(k.u.f) && fabs(k.u.f) < 9e18) return sw_liczba((long long)k.u.f);
+    if (k.t == T_LICZBA || k.t == T_PISMO || k.t == T_SAD) return k;
+    sw_grzech(L, "Kluczem w ſpiśie bywá liczbá, piſmo álbo prawdá, nie %s.", sw_typ(k));
+    return SW_NIC;
+}
+
+static W sw_spis_nowy(void) {
+    Spis *s = sw_alloc(sizeof *s);
+    memset(s, 0, sizeof *s);
+    W w;
+    w.t = T_SPIS;
+    w.u.p = s;
+    return w;
+}
+
+static long long sw_spis_szukaj(Spis *s, W k) {
+    if (!s->nidx || (k.t != T_LICZBA && k.t != T_PISMO && k.t != T_SAD)) return -1;
+    size_t m = s->nidx - 1, i = (size_t)sw_skrot(k) & m;
+    for (;;) {
+        long long j = s->idx[i];
+        if (j < 0) return -1;
+        if (sw_rowne_(s->klucze[j], k)) return j;
+        i = (i + 1) & m;
+    }
+}
+
+static void sw_spis_indeksuj(Spis *s) {
+    size_t n = 16;
+    while (n < s->len * 2 + 2) n *= 2;
+    s->idx = sw_realloc(s->idx, n * sizeof(long long));
+    s->nidx = n;
+    for (size_t i = 0; i < n; i++) s->idx[i] = -1;
+    for (size_t j = 0; j < s->len; j++) {
+        size_t i = (size_t)sw_skrot(s->klucze[j]) & (n - 1);
+        while (s->idx[i] >= 0) i = (i + 1) & (n - 1);
+        s->idx[i] = (long long)j;
+    }
+}
+
+static void sw_spis_wloz(W sp, W k, W v, int L) {
+    Spis *s = sp.u.p;
+    k = sw_klucz(k, L);
+    long long j = sw_spis_szukaj(s, k);
+    if (j >= 0) {
+        s->wart[j] = v;
+        return;
+    }
+    if (s->len == s->cap) {
+        s->cap = s->cap ? s->cap * 2 : 8;
+        s->klucze = sw_realloc(s->klucze, s->cap * sizeof(W));
+        s->wart = sw_realloc(s->wart, s->cap * sizeof(W));
+    }
+    s->klucze[s->len] = k;
+    s->wart[s->len] = v;
+    s->len++;
+    if (s->len * 2 + 2 > s->nidx) {
+        sw_spis_indeksuj(s);
+    } else {
+        size_t i = (size_t)sw_skrot(k) & (s->nidx - 1);
+        while (s->idx[i] >= 0) i = (i + 1) & (s->nidx - 1);
+        s->idx[i] = (long long)(s->len - 1);
+    }
+}
+
+/* Spis z par: (W[]){klucz, wartość, klucz, wartość, …}. */
+static W sw_spis_z(int n, W *pary, int L) {
+    W w = sw_spis_nowy();
+    for (int i = 0; i < n; i++) sw_spis_wloz(w, pary[2 * i], pary[2 * i + 1], L);
+    return w;
+}
+
+static W sw_spis_wez(W sp, W k, int L) {
+    long long j = sw_spis_szukaj(sp.u.p, sw_klucz(k, L));
+    return j < 0 ? SW_NIC : sp.u.p->wart[j];
+}
+
+static void sw_spis_wyrzuc(Spis *s, W k) {
+    long long j = sw_spis_szukaj(s, k);
+    if (j < 0) return;
+    size_t reszta = s->len - (size_t)j - 1;
+    memmove(s->klucze + j, s->klucze + j + 1, reszta * sizeof(W));
+    memmove(s->wart + j, s->wart + j + 1, reszta * sizeof(W));
+    s->len--;
+    sw_spis_indeksuj(s);
+}
+
+static W sw_b_klucze(W x, int L) {
+    if (x.t != T_SPIS) sw_grzech(L, "Klucze ma ieno ſpis, nie %s.", sw_typ(x));
+    return sw_regestr_z((int)x.u.p->len, x.u.p->klucze);
+}
+
+static W sw_b_wartosci(W x, int L) {
+    if (x.t != T_SPIS) sw_grzech(L, "Wártośći po kluczach ma ieno ſpis, nie %s.", sw_typ(x));
+    return sw_regestr_z((int)x.u.p->len, x.u.p->wart);
+}
+
+/* Zaczątek dla «Zwiększ ceny pod „chleb”», gdy klucza jeszcze nie ma: zero, jedynka,
+ * puste pismo albo nowy regestr — zależnie od tego, co się dokłada.
+ * Rachunki: 0 dodać, 1 odjąć, 2 mnożyć, 3 dzielić, 4 dołożyć. */
+static W sw_zaczatek(W cur, W v, int rachunek) {
+    if (cur.t != T_NIC) return cur;
+    if (sw_jest_liczba(v)) return rachunek == 2 ? sw_liczba(1) : rachunek == 3 ? cur : sw_liczba(0);
+    if (rachunek == 4) return sw_regestr_nowy();
+    if (rachunek == 0 && v.t == T_PISMO) return sw_pismo_n("", 0);
+    return cur;
+}
+
 /* ─────────── regestry ─────────── */
 
 static W sw_element(W c, W i, int L) {
+    if (c.t == T_SPIS) return sw_spis_wez(c, i, L);
     if (c.t == T_REGESTR) return c.u.r->el[sw_indeks(i, (long long)c.u.r->len, L)];
     if (c.t == T_PISMO) return sw_znak(c.u.s, (size_t)sw_indeks(i, (long long)c.u.s->zn, L));
     sw_grzech(L, "Z rzeczy tákiey (%s) elementu nie wyiąć.", sw_typ(c));
@@ -460,6 +650,10 @@ static W sw_element(W c, W i, int L) {
 
 static void sw_ustaw(W c, W i, W v, int L) {
     if (c.t == T_PISMO) sw_grzech(L, "Piſmá zmieniáć nie lza — vtwórz nowe.");
+    if (c.t == T_SPIS) {
+        sw_spis_wloz(c, i, v, L);
+        return;
+    }
     if (c.t != T_REGESTR) sw_grzech(L, "Z rzeczy tákiey (%s) elementu nie zmienić.", sw_typ(c));
     c.u.r->el[sw_indeks(i, (long long)c.u.r->len, L)] = v;
 }
@@ -486,6 +680,7 @@ static void sw_ustaw_ostatni(W c, W v, int L) {
 static W sw_dlugosc(W c, int L) {
     if (c.t == T_REGESTR) return sw_liczba((long long)c.u.r->len);
     if (c.t == T_PISMO) return sw_liczba((long long)c.u.s->zn);
+    if (c.t == T_SPIS) return sw_liczba((long long)c.u.p->len);
     sw_grzech(L, "Długośći nie ma rzecz táka: %s.", sw_typ(c));
     return SW_NIC;
 }
@@ -493,6 +688,7 @@ static W sw_dlugosc(W c, int L) {
 static long long sw_iter_dl(W c, int L) {
     if (c.t == T_REGESTR) return (long long)c.u.r->len;
     if (c.t == T_PISMO) return (long long)c.u.s->zn;
+    if (c.t == T_SPIS) return (long long)c.u.p->len;
     sw_grzech(L, "Po rzeczy tákiey (%s) chodźić element po elemenćie nie ſpoſób.", sw_typ(c));
     return 0;
 }
@@ -500,6 +696,7 @@ static long long sw_iter_dl(W c, int L) {
 static W sw_iter_el(W c, long long k, int L) {
     (void)L;
     if (c.t == T_REGESTR) return c.u.r->el[k];
+    if (c.t == T_SPIS) return c.u.p->klucze[k];
     return sw_znak(c.u.s, (size_t)k);
 }
 
@@ -538,6 +735,7 @@ static W sw_zawiera(W c, W x, int L) {
         W s = sw_napis(x);
         return sw_sad(memmem(c.u.s->d, c.u.s->len, s.u.s->d, s.u.s->len) != NULL);
     }
+    if (c.t == T_SPIS) return sw_sad(sw_spis_szukaj(c.u.p, x) >= 0);
     sw_grzech(L, "Rzecz táka (%s) niczego w ſobie nie mieśći.", sw_typ(c));
     return SW_NIC;
 }
@@ -561,6 +759,23 @@ static void sw_usun(W c, W i, int L) {
     long long k = sw_indeks(i, (long long)r->len, L);
     memmove(r->el + k, r->el + k + 1, (r->len - (size_t)k - 1) * sizeof(W));
     r->len--;
+}
+
+/* «Usuń „chleb” z cen»: ze spisu wyrzuca klucz, z regestru pierwszy równy element. */
+static W sw_usun_wartosc(W c, W v, int L) {
+    if (c.t == T_SPIS) {
+        sw_spis_wyrzuc(c.u.p, v);
+        return SW_NIC;
+    }
+    if (c.t != T_REGESTR) sw_grzech(L, "Uſuwáć możná ieno z regeſtru álbo ze ſpiſu, nie z: %s.", sw_typ(c));
+    Regestr *r = c.u.r;
+    for (size_t k = 0; k < r->len; k++)
+        if (sw_rowne_(r->el[k], v)) {
+            memmove(r->el + k, r->el + k + 1, (r->len - k - 1) * sizeof(W));
+            r->len--;
+            break;
+        }
+    return SW_NIC;
 }
 
 /* ─────────── rody ─────────── */
@@ -906,7 +1121,6 @@ static W sw_b_max(W x, int L) { return sw_skrajny(x, 1, L); }
 static W sw_b_min(W x, int L) { return sw_skrajny(x, 0, L); }
 
 static W sw_b_kopia(W x, int L) {
-    (void)L;
     if (x.t == T_REGESTR) return sw_regestr_z((int)x.u.r->len, x.u.r->el);
     if (x.t == T_ROD) {
         int np = sw_rod_npol[x.u.o->rod];
@@ -917,6 +1131,11 @@ static W sw_b_kopia(W x, int L) {
         W w;
         w.t = T_ROD;
         w.u.o = o;
+        return w;
+    }
+    if (x.t == T_SPIS) {
+        W w = sw_spis_nowy();
+        for (size_t i = 0; i < x.u.p->len; i++) sw_spis_wloz(w, x.u.p->klucze[i], x.u.p->wart[i], L);
         return w;
     }
     return x;
@@ -935,12 +1154,208 @@ static W sw_b_zlacz(W x, W sep, int L) {
     return w;
 }
 
+/* ─────────── klątwy i rodzaje ─────────── */
+
+static void sw_rzuc(W v, int L) {
+    if (sw_proby_n > 0) {
+        sw_bieda = v;
+        longjmp(sw_proby[--sw_proby_n], 1);
+    }
+    sw_grzech(L, "Klątwá nie zdięta: %s", sw_napis(v).u.s->d);
+}
+
+/* Rodzaje: 0 nicość, 1 liczba, 2 ułamek, 3 pismo, 4 regestr, 5 spis, 6 prawda albo fałsz,
+ * 7 liczba całkowita, 100 + n — ród o numerze n. */
+static W sw_jest_typu(W a, int rodzaj, int L) {
+    (void)L;
+    switch (rodzaj) {
+    case 0: return sw_sad(a.t == T_NIC);
+    case 1: return sw_sad(sw_jest_liczba(a));
+    case 2: return sw_sad(a.t == T_ULAMEK);
+    case 3: return sw_sad(a.t == T_PISMO);
+    case 4: return sw_sad(a.t == T_REGESTR);
+    case 5: return sw_sad(a.t == T_SPIS);
+    case 6: return sw_sad(a.t == T_SAD);
+    case 7: return sw_sad(a.t == T_LICZBA);
+    default: return sw_sad(a.t == T_ROD && a.u.o->rod == rodzaj - 100);
+    }
+}
+
+static W sw_b_rodzaj(W a, int L) {
+    (void)L;
+    const char *s = sw_typ(a);
+    return sw_pismo_n(s, strlen(s));
+}
+
+/* ─────────── liczby rzymskie i słowne ─────────── */
+
+static W sw_rzymskie(W a, int L) {
+    long long n = sw_calk(a, L);
+    if (n < 0) sw_grzech(L, "Rzymiánie liczb vieymnych nie ználi.");
+    if (n > 100000) sw_grzech(L, "Liczby %lld Rzymiánie nie piſáli — tyle «M» nie zmieśći żadna kártá.", n);
+    if (n == 0) return sw_pismo_n("nulla", 5);
+    static const int v[] = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
+    static const char *const r[] = {"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
+    Buf b = {0};
+    for (int i = 0; i < 13; i++)
+        while (n >= v[i]) {
+            buf_str(&b, r[i]);
+            n -= v[i];
+        }
+    W w = sw_pismo_n(b.d, b.len);
+    free(b.d);
+    return w;
+}
+
+/* Liczebniki pisane tak, by skryba umiał je przeczytać z powrotem. */
+static const char *const sw_sl_jedn[] = {"", "ieden", "dwá", "trzy", "cztery", "pięć", "ſześć", "ſiedem", "ośiem", "dźiewięć"};
+static const char *const sw_sl_nast[] = {"dźieśięć", "iedenaśćie", "dwánaśćie", "trzynaśćie", "czternaśćie",
+                                         "piętnaśćie", "ſzesnaśćie", "ſiedemnaśćie", "ośiemnaśćie", "dźiewiętnaśćie"};
+static const char *const sw_sl_dzies[] = {"", "", "dwádźieśćiá", "trzydźieśći", "czterdźieśći", "pięćdźieśiąt",
+                                          "ſześćdźieśiąt", "ſiedemdźieśiąt", "ośiemdźieśiąt", "dźiewięćdźieśiąt"};
+static const char *const sw_sl_setki[] = {"", "ſto", "dwieśćie", "trzyſtá", "czteryſtá", "pięćſet",
+                                          "ſześćſet", "ſiedemſet", "ośiemſet", "dźiewięćſet"};
+static const char *const sw_sl_rzedy[][3] = {
+    {"", "", ""},
+    {"tyśiąc", "tyśiące", "tyśięcy"},
+    {"milion", "miliony", "milionów"},
+    {"miliárd", "miliárdy", "miliárdów"},
+    {"bilion", "biliony", "bilionów"},
+    {"biliárd", "biliárdy", "biliárdów"},
+    {"trylion", "tryliony", "trylionów"},
+};
+
+static void sw_sl_slowo(Buf *b, const char *s) {
+    if (!*s) return;
+    if (b->len && b->d[b->len - 1] != ' ') buf_str(b, " ");
+    buf_str(b, s);
+}
+
+static W sw_slownie(W a, int L) {
+    long long x = sw_calk(a, L);
+    if (x == 0) return sw_pismo_n("zero", 4);
+    Buf b = {0};
+    unsigned long long n = x < 0 ? 0ULL - (unsigned long long)x : (unsigned long long)x;
+    if (x < 0) buf_str(&b, "minus");
+    unsigned long long dziel = 1;
+    int rzad = 0;
+    while (n / dziel >= 1000) {
+        dziel *= 1000;
+        rzad++;
+    }
+    for (; rzad >= 0; rzad--, dziel /= 1000) {
+        int t = (int)(n / dziel % 1000);
+        if (!t) continue;
+        if (!(rzad > 0 && t == 1)) {
+            sw_sl_slowo(&b, sw_sl_setki[t / 100]);
+            int d = t % 100;
+            if (d >= 10 && d < 20) sw_sl_slowo(&b, sw_sl_nast[d - 10]);
+            else {
+                sw_sl_slowo(&b, sw_sl_dzies[d / 10]);
+                sw_sl_slowo(&b, sw_sl_jedn[d % 10]);
+            }
+        }
+        if (rzad > 0) {
+            int j = t % 10, d = t % 100;
+            int forma = t == 1 ? 0 : (j >= 2 && j <= 4 && !(d >= 12 && d <= 14)) ? 1 : 2;
+            sw_sl_slowo(&b, sw_sl_rzedy[rzad][forma]);
+        }
+    }
+    W w = sw_pismo_n(b.d, b.len);
+    free(b.d);
+    return w;
+}
+
+/* ─────────── pliki i katalogi ─────────── */
+
+static W sw_b_istnieje(W p, int L) {
+    (void)L;
+    struct stat st;
+    return sw_sad(stat(sw_napis(p).u.s->d, &st) == 0);
+}
+
+static W sw_b_usun_plik(W p, int L) {
+    const char *path = sw_napis(p).u.s->d;
+    if (remove(path) != 0) sw_grzech(L, "Pliku „%s” vſunąć nie podobná: %s.", path, strerror(errno));
+    return SW_NIC;
+}
+
+static W sw_b_katalog(W p, int L) {
+    W path = sw_napis(p);
+    char *d = path.u.s->d;
+    for (size_t i = 1; i <= path.u.s->len; i++) {
+        if (i < path.u.s->len && d[i] != '/') continue;
+        char c = d[i];
+        d[i] = 0;
+        int r = mkdir(d, 0777);
+        int blad = errno;
+        d[i] = c;
+        if (r != 0 && blad != EEXIST)
+            sw_grzech(L, "Kátálogu „%s” záłożyć nie podobná: %s.", d, strerror(blad));
+    }
+    struct stat st;
+    if (stat(d, &st) != 0 || !S_ISDIR(st.st_mode))
+        sw_grzech(L, "„%s” ſtoi iuż ná tym mieyſcu, á kátálogiem nie ieſt.", d);
+    return SW_NIC;
+}
+
+static W sw_b_przenies(W a, W b, int L) {
+    const char *z = sw_napis(a).u.s->d, *dokad = sw_napis(b).u.s->d;
+    if (rename(z, dokad) != 0) sw_grzech(L, "Pliku „%s” do „%s” przenieść nie podobná: %s.", z, dokad, strerror(errno));
+    return SW_NIC;
+}
+
+static int sw_por_miana(const void *a, const void *b) { return strcmp(*(char *const *)a, *(char *const *)b); }
+
+static W sw_b_zawartosc(W p, int L) {
+    const char *path = sw_napis(p).u.s->d;
+    DIR *dir = opendir(path);
+    if (!dir) sw_grzech(L, "Kátálogu „%s” przeyrzeć nie podobná: %s.", path, strerror(errno));
+    char **miana = NULL;
+    size_t n = 0, cap = 0;
+    struct dirent *e;
+    while ((e = readdir(dir))) {
+        if (!strcmp(e->d_name, ".") || !strcmp(e->d_name, "..")) continue;
+        if (n == cap) {
+            cap = cap ? cap * 2 : 16;
+            miana = sw_realloc(miana, cap * sizeof(char *));
+        }
+        miana[n++] = strdup(e->d_name);
+    }
+    closedir(dir);
+    qsort(miana, n, sizeof(char *), sw_por_miana);
+    W w = sw_regestr_nowy();
+    for (size_t i = 0; i < n; i++) {
+        sw_wloz(w, sw_pismo_n(miana[i], strlen(miana[i])));
+        free(miana[i]);
+    }
+    free(miana);
+    return w;
+}
+
 /* ─────────── początek i koniec ─────────── */
 
+static int sw_argc;
+static char **sw_argv;
+
 static void sw_start(int argc, char **argv) {
-    (void)argc;
-    (void)argv;
+    sw_argc = argc;
+    sw_argv = argv;
     srandom((unsigned)time(NULL) ^ (unsigned)getpid());
 }
 
+/* Słowa, z którymi program wywołano (bez miana samego programu). */
+static W sw_b_slowa_wywolania(int L) {
+    (void)L;
+    W w = sw_regestr_nowy();
+    for (int i = 1; i < sw_argc; i++) sw_wloz(w, sw_auto(sw_argv[i], strlen(sw_argv[i])));
+    return w;
+}
+
 static void sw_koniec(void) { fflush(stdout); }
+
+static void sw_zakoncz(W kod, int L) {
+    long long k = sw_calk(kod, L);
+    sw_koniec();
+    exit((int)(k & 255));
+}

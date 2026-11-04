@@ -15,7 +15,7 @@ use crate::words::{Kw, NumClass, number, roman};
 type R<T> = Result<T, CompileError>;
 
 /// Uczynki wbudowane: miano, ile rzeczy, funkcja biegu, dodatkowe przegrody między rzeczami.
-const BUILTINS: &[(&str, usize, &str, &[Kw])] = &[
+pub const BUILTINS: &[(&str, usize, &str, &[Kw])] = &[
     ("pierwiastek", 1, "sw_b_pierwiastek", &[]),
     ("wartość bezwzględna", 1, "sw_b_abs", &[]),
     ("zaokrąglenie", 1, "sw_b_zaokraglenie", &[]),
@@ -32,6 +32,9 @@ const BUILTINS: &[(&str, usize, &str, &[Kw])] = &[
     ("kopia", 1, "sw_b_kopia", &[]),
     ("złączenie", 2, "sw_b_zlacz", &[Kw::Przez]),
     ("rozcięcie", 2, "sw_b_rozciecie", &[Kw::Przez]),
+    ("rodzaj", 1, "sw_b_rodzaj", &[]),
+    ("słowa wywołania", 0, "sw_b_slowa_wywolania", &[]),
+    ("zawartość katalogu", 1, "sw_b_zawartosc", &[]),
 ];
 
 const SIMPLE_VERBS: &[Kw] = &[
@@ -55,6 +58,10 @@ const SIMPLE_VERBS: &[Kw] = &[
     Kw::Usun,
     Kw::Zapisz,
     Kw::Dopisz,
+    Kw::Rzuc,
+    Kw::Zakoncz,
+    Kw::Utworz,
+    Kw::Przenies,
 ];
 
 struct VarEntry {
@@ -110,6 +117,8 @@ pub struct Parser {
     globals: Vec<(String, String)>,
     counter: usize,
     func_defs: Vec<FuncDef>,
+    /// Miejsca „dla każdego”, których regestr składany w locie właśnie się czyta.
+    comp_active: Vec<usize>,
 }
 
 fn is_name_word(t: &Token) -> bool {
@@ -262,6 +271,7 @@ impl Parser {
             globals: Vec::new(),
             counter: 0,
             func_defs: Vec::new(),
+            comp_active: Vec::new(),
         };
         for (name, arity, cfn, seps) in BUILTINS {
             let (words, stems) = split_name(name);
@@ -450,7 +460,14 @@ impl Parser {
     fn best(&self, mut list: Vec<Found>, p: usize) -> R<Option<Found>> {
         // Ród w środku wyrażenia nic nie znaczy (tworzy się go słowem «nowy»), więc ustępuje
         // każdej innej rzeczy, nawet gdy jego miano pasuje dokładniej.
-        list.sort_by_key(|f| (std::cmp::Reverse(f.len), matches!(f.kind, NK::Rod(_)), !f.exact, f.rank));
+        list.sort_by_key(|f| {
+            (
+                std::cmp::Reverse(f.len),
+                matches!(f.kind, NK::Rod(_)),
+                !f.exact,
+                f.rank,
+            )
+        });
         if list.len() >= 2 {
             let (a, b) = (&list[0], &list[1]);
             if a.len == b.len && a.exact == b.exact && a.rank == b.rank {
@@ -501,6 +518,9 @@ impl Parser {
                         | Kw::Nowy
                         | Kw::Nie
                         | Kw::Minus
+                        | Kw::Spis
+                        | Kw::Kazdy
+                        | Kw::Plik
                 ),
             },
             _ => false,
@@ -549,7 +569,7 @@ impl Parser {
         let t = self.tok(p);
         matches!(
             t.kw,
-            Some(Kw::Jesli | Kw::Poki | Kw::Zawsze | Kw::Dla | Kw::Powtorz)
+            Some(Kw::Jesli | Kw::Poki | Kw::Zawsze | Kw::Dla | Kw::Powtorz | Kw::Sprobuj)
         ) || (t.kw == Some(Kw::Minus) && t.norm == "bez" && self.tok(p + 1).norm == "konca")
     }
 
@@ -973,7 +993,96 @@ impl Parser {
         if self.is_kw(Kw::Azali) {
             return true;
         }
-        self.norm_at(0) == "a" && self.kw_at(1) == Some(Kw::Jesli) && !self.is_else_start()
+        self.norm_at(0) == "a"
+            && self.kw_at(1) == Some(Kw::Jesli)
+            && !self.is_else_start()
+            && !self.is_catch_start()
+    }
+
+    /// „A w razie biedy”, „A jeśli bieda”, „Na wypadek biedy”, „Biada…”
+    fn is_catch_start(&self) -> bool {
+        let o = usize::from(self.norm_at(0) == "a");
+        match self.kw_at(o) {
+            Some(Kw::Jesli) => self.kw_at(o + 1) == Some(Kw::Biada),
+            Some(Kw::W) => {
+                self.kw_at(o + 1) == Some(Kw::Razie) && self.kw_at(o + 2) == Some(Kw::Biada)
+            }
+            Some(Kw::Na) => {
+                self.norm_at(o + 1) == "wipadek" && self.kw_at(o + 2) == Some(Kw::Biada)
+            }
+            Some(Kw::Biada) => true,
+            _ => false,
+        }
+    }
+
+    /// Biada po próbie: miano biedy po «zwanej» i ciało, co ją opłakuje.
+    fn parse_catch(&mut self, stmt: &mut Stmt) -> R<bool> {
+        let Stmt::Try {
+            catch_var, handler, ..
+        } = stmt
+        else {
+            unreachable!()
+        };
+        if handler.is_some() {
+            return Err(self.err_here("Tá próbá ma iuż ſwoię biedę; drugiey mieć nie może."));
+        }
+        while !self.is_kw(Kw::Biada) {
+            self.pos += 1;
+        }
+        self.pos += 1;
+        // „A w razie biedy wielkiej, zwanej nieszczęściem: …” — reszta to opowieść.
+        let mut name = Vec::new();
+        loop {
+            if self.is_p(",") && self.kw_at(1) == Some(Kw::Zwany) {
+                self.pos += 1;
+            }
+            if self.eat_kw(Kw::Zwany) {
+                name = self.gather_name_words();
+                if name.is_empty() {
+                    return Err(self.name_error("biedy"));
+                }
+                continue;
+            }
+            if self.is_p(":")
+                || self.is_p(",")
+                || self.is_terminator()
+                || matches!(self.peek().k, K::Indent | K::Dedent | K::Eof)
+                || self.starts_simple(self.pos)
+                || self.starts_compound(self.pos)
+            {
+                break;
+            }
+            self.pos += 1;
+        }
+        let (body, block) = if name.is_empty() {
+            self.parse_body()?
+        } else {
+            let (words, stems, display) = words_of(&name);
+            let cname = self.new_cname(&display);
+            self.hoist(&cname, &display);
+            *catch_var = Some(cname.clone());
+            self.with_scope(
+                Some(VarEntry {
+                    words,
+                    stems,
+                    cname,
+                }),
+                |p| p.parse_body(),
+            )?
+        };
+        *handler = Some(body);
+        Ok(block)
+    }
+
+    fn with_scope<T>(
+        &mut self,
+        entry: Option<VarEntry>,
+        f: impl FnOnce(&mut Self) -> R<T>,
+    ) -> R<T> {
+        self.scopes.push(entry.into_iter().collect());
+        let r = f(self);
+        self.scopes.pop();
+        r
     }
 
     fn is_else_start(&self) -> bool {
@@ -1019,6 +1128,21 @@ impl Parser {
     }
 
     fn parse_sentence_into(&mut self, out: &mut Vec<Stmt>) -> R<()> {
+        if self.is_catch_start() {
+            let t = self.peek().clone();
+            let Some(mut stmt @ Stmt::Try { .. }) = out.pop() else {
+                return Err(err_at(
+                    &t,
+                    "Biedá bez wcześnieyſzego «Spróbuy» — czego tu ſię lękáć?",
+                ));
+            };
+            let block = self.parse_catch(&mut stmt)?;
+            if !block {
+                self.expect_terminator()?;
+            }
+            out.push(stmt);
+            return Ok(());
+        }
         if self.is_elif_start() || self.is_else_start() {
             let t = self.peek().clone();
             let Some(Stmt::If(arms, els, line)) = out.pop() else {
@@ -1051,16 +1175,33 @@ impl Parser {
                 self.err_here("Ród ſpiſuie ſię ieno ná wierzchu piſmá, nie we wnętrzu bloku.")
             );
         }
-        if self.starts_compound(self.pos) {
+        let (at, start, first) = (out.len(), self.pos, self.line());
+        let last = if self.starts_compound(self.pos) {
             let (s, block) = self.parse_compound()?;
             out.push(s);
             if !block {
                 self.expect_terminator()?;
             }
-            return Ok(());
+            self.header_end(start)
+        } else {
+            out.extend(self.parse_inline_chain()?);
+            self.expect_terminator()?;
+            self.tok(self.pos - 1).line
+        };
+        out.insert(at, Stmt::Mark(first, last));
+        Ok(())
+    }
+
+    /// Wiersz, w którym kończy się nagłówek zdania (do dwukropka albo kropki).
+    fn header_end(&self, start: usize) -> usize {
+        let mut i = start;
+        while !matches!(
+            &self.tok(i).k,
+            K::P(":" | "." | "!" | "?" | ";") | K::Indent | K::Eof
+        ) {
+            i += 1;
         }
-        out.extend(self.parse_inline_chain()?);
-        self.expect_terminator()
+        self.tok(i).line
     }
 
     fn parse_compound(&mut self) -> R<(Stmt, bool)> {
@@ -1104,6 +1245,26 @@ impl Parser {
                 Ok((Stmt::Repeat(n, body, line), block))
             }
             Some(Kw::Dla) => self.parse_for(line),
+            Some(Kw::Sprobuj) => {
+                self.pos += 1;
+                let (body, block) = self.parse_body()?;
+                let mut stmt = Stmt::Try {
+                    body,
+                    catch_var: None,
+                    handler: None,
+                };
+                if block {
+                    return Ok((stmt, true));
+                }
+                // „Spróbuj …, a w razie biedy …” w jednym zdaniu.
+                let save = self.pos;
+                if self.eat_p(",") && self.is_catch_start() {
+                    let block = self.parse_catch(&mut stmt)?;
+                    return Ok((stmt, block));
+                }
+                self.pos = save;
+                Ok((stmt, false))
+            }
             _ => Err(self.expected("rozkázu")),
         }
     }
@@ -1383,6 +1544,14 @@ impl Parser {
                 })
             }
             Kw::Usun => {
+                if self.eat_kw(Kw::Plik) {
+                    let path = self.parse_add()?;
+                    return Ok(Stmt::Expr(Expr::Builtin(
+                        "sw_b_usun_plik",
+                        vec![path],
+                        line,
+                    )));
+                }
                 let index = match self.peek().kw {
                     Some(Kw::Ordinal(n)) => {
                         self.pos += 1;
@@ -1392,10 +1561,18 @@ impl Parser {
                         self.pos += 1;
                         Some(self.parse_add()?)
                     }
+                    // „Usuń „chleb” z cen” — klucz ze spisu albo wartość z regestru.
                     _ => {
-                        return Err(
-                            self.expected("«oſtátni element», «pierwſzy element» álbo «element N»")
-                        );
+                        let v = self.parse_add()?;
+                        if !(self.eat_kw(Kw::Z) || self.eat_kw(Kw::W)) {
+                            return Err(self.expected("«z» (np. «Uſuń „chleb” z cen»)"));
+                        }
+                        let coll = self.parse_postfix()?;
+                        return Ok(Stmt::Expr(Expr::Builtin(
+                            "sw_usun_wartosc",
+                            vec![coll, v],
+                            line,
+                        )));
                     }
                 };
                 self.eat_kw(Kw::Element);
@@ -1417,6 +1594,60 @@ impl Parser {
                     append: kw == Kw::Dopisz,
                     line,
                 })
+            }
+            Kw::Rzuc => {
+                // „Rzuć klątwę „Chleba brak!”.”
+                if self.norm_at(0).starts_with("klatw") {
+                    self.pos += 1;
+                }
+                let v = if self.is_terminator()
+                    || self.is_p(",")
+                    || matches!(self.peek().k, K::Dedent | K::Eof)
+                {
+                    Expr::Str("klątwa".to_string())
+                } else {
+                    self.parse_expr()?
+                };
+                Ok(Stmt::Throw(v, line))
+            }
+            Kw::Zakoncz => {
+                // „Zakończ opowieść.”, „Zakończ z grzechem.”, „Zakończ z kodem trzy.”
+                while is_name_word(self.peek()) && self.find_names(self.pos).is_empty() {
+                    self.pos += 1;
+                }
+                let code = if self.is_kw(Kw::Z) && self.norm_at(1).starts_with("grzech") {
+                    self.pos += 2;
+                    Expr::Int(1)
+                } else if self.is_kw(Kw::Z) && self.norm_at(1) == "kodem" {
+                    self.pos += 2;
+                    self.parse_add()?
+                } else {
+                    Expr::Int(0)
+                };
+                Ok(Stmt::Exit(code, line))
+            }
+            Kw::Utworz => {
+                if !self.norm_at(0).starts_with("katalog") {
+                    return Err(self.expected("«kátálog» (np. «Vtwórz kátálog „kroniki”»)"));
+                }
+                self.pos += 1;
+                let path = self.parse_add()?;
+                Ok(Stmt::Expr(Expr::Builtin("sw_b_katalog", vec![path], line)))
+            }
+            Kw::Przenies => {
+                self.eat_kw(Kw::Plik);
+                let from = self.parse_add()?;
+                self.expect_kw(
+                    Kw::Do,
+                    "ſłowá «do» (np. «Przenieś plik „a.txt” do „b.txt”»)",
+                )?;
+                self.eat_kw(Kw::Plik);
+                let to = self.parse_add()?;
+                Ok(Stmt::Expr(Expr::Builtin(
+                    "sw_b_przenies",
+                    vec![from, to],
+                    line,
+                )))
             }
             _ => Err(err_at(
                 t,
@@ -1441,7 +1672,11 @@ impl Parser {
                 newline = false;
                 break;
             }
-            args.push(self.parse_not()?);
+            let arg = match self.try_comprehension()? {
+                Some(e) => e,
+                None => self.parse_not()?,
+            };
+            args.push(arg);
             let save = self.pos;
             let sep = self.eat_p(",") || self.eat_kw(Kw::I) || self.eat_kw(Kw::Oraz);
             if self.at_no_newline() {
@@ -1500,6 +1735,15 @@ impl Parser {
                 return self.parse_place();
             }
         }
+        if let Some(Found {
+            kind: NK::Var(_),
+            len,
+            ..
+        }) = &other
+            && self.tok(self.pos + len).kw == Some(Kw::Pod)
+        {
+            return self.parse_place();
+        }
         let words = self.gather_name_words();
         if let Some(c) = self.lookup_var(&words) {
             return Ok(Place::Var(c));
@@ -1525,7 +1769,220 @@ impl Parser {
     // ───────────────────────── wyrażenia ─────────────────────────
 
     pub fn parse_expr(&mut self) -> R<Expr> {
+        if let Some(e) = self.try_comprehension()? {
+            return Ok(e);
+        }
         self.parse_or()
+    }
+
+    /// „dla każdego” dalej w tym samym zdaniu, nie po przecinku (tam zaczyna się pętla).
+    fn find_comp_dla(&self) -> Option<usize> {
+        let mut depth = 0i32;
+        let mut i = self.pos;
+        loop {
+            let t = self.tok(i);
+            match &t.k {
+                K::Eof | K::Indent | K::Dedent => return None,
+                K::P("(") => depth += 1,
+                K::P(")") => {
+                    depth -= 1;
+                    if depth < 0 {
+                        return None;
+                    }
+                }
+                K::P("." | "!" | "?" | ";" | ":") if depth == 0 => return None,
+                K::Word
+                    if depth == 0
+                        && i > self.pos
+                        && t.kw == Some(Kw::Dla)
+                        && self.tok(i + 1).kw == Some(Kw::Kazdy)
+                        && !matches!(self.tok(i - 1).k, K::P(",") | K::P(":")) =>
+                {
+                    return (!self.comp_active.contains(&i)).then_some(i);
+                }
+                _ => {}
+            }
+            i += 1;
+        }
+    }
+
+    /// „x razy x dla każdego x od jednego do dziesięciu, które są parzyste” — regestr
+    /// składany w locie. Głowa stoi przed rzeczą, którą nazywa, więc czyta się ją
+    /// z mianem już ochrzczonym; jeśli się nie uda, to nie był regestr składany.
+    fn try_comprehension(&mut self) -> R<Option<Expr>> {
+        let Some(d) = self.find_comp_dla() else {
+            return Ok(None);
+        };
+        let (start, line) = (self.pos, self.line());
+        let mut after = d + 2;
+        let mut name = Vec::new();
+        while name_word_at(&self.toks, after) {
+            name.push(self.tok(after).clone());
+            after += 1;
+        }
+        if name.is_empty() {
+            return Ok(None);
+        }
+        let (words, stems, display) = words_of(&name);
+        let cname = self.new_cname(&display);
+        let entry = || VarEntry {
+            words: words.clone(),
+            stems: stems.clone(),
+            cname: cname.clone(),
+        };
+        self.comp_active.push(d);
+        let head = self.with_scope(Some(entry()), |p| p.parse_or());
+        self.comp_active.pop();
+        let head = match head {
+            Ok(h) if self.pos == d => h,
+            _ => {
+                self.pos = start;
+                return Ok(None);
+            }
+        };
+        self.hoist(&cname, &display);
+        self.pos = after;
+        let src = self.parse_comp_src()?;
+        let el = Expr::Var(cname.clone());
+        let filter = self.with_scope(Some(entry()), |p| p.parse_comp_filter(&el))?;
+        Ok(Some(Expr::Comp {
+            var: cname,
+            src,
+            map: Some(Box::new(head)),
+            filter: filter.map(Box::new),
+            line,
+        }))
+    }
+
+    fn parse_comp_src(&mut self) -> R<CompSrc> {
+        if self.eat_kw(Kw::Od) {
+            let from = self.parse_add()?;
+            self.expect_kw(Kw::Do, "ſłowá «do» (np. «od iednego do dzieśięćiu»)")?;
+            let to = self.parse_add()?;
+            let step = if self.eat_kw(Kw::Co) {
+                Some(Box::new(self.parse_add()?))
+            } else {
+                None
+            };
+            return Ok(CompSrc::Range(Box::new(from), Box::new(to), step));
+        }
+        if self.eat_kw(Kw::Z) || self.eat_kw(Kw::W) {
+            return Ok(CompSrc::Each(Box::new(self.parse_add()?)));
+        }
+        Err(self.expected("«od … do …» álbo «z …»"))
+    }
+
+    /// „wszystkie oceny, które są większe niż trzy”, „wszyscy żacy z listy, których
+    /// średnia jest większa niż cztery”, „wszystkie liczby od 1 do 50 podzielne…”.
+    fn parse_every(&mut self, line: usize) -> R<Expr> {
+        let save = self.pos;
+        let name = self.gather_name_words();
+        let (src, entry_name) = if matches!(self.peek().kw, Some(Kw::Z | Kw::W | Kw::Od)) {
+            (self.parse_comp_src()?, name)
+        } else {
+            self.pos = save;
+            (CompSrc::Each(Box::new(self.parse_postfix()?)), Vec::new())
+        };
+        let (words, stems, display) = words_of(&entry_name);
+        let cname = self.new_cname(if display.is_empty() { "ten" } else { &display });
+        self.hoist(&cname, &display);
+        let entry = (!words.is_empty()).then(|| VarEntry {
+            words,
+            stems,
+            cname: cname.clone(),
+        });
+        let el = Expr::Var(cname.clone());
+        let filter = self.with_scope(entry, |p| p.parse_comp_filter(&el))?;
+        Ok(Expr::Comp {
+            var: cname,
+            src,
+            map: None,
+            filter: filter.map(Box::new),
+            line,
+        })
+    }
+
+    /// Warunek po przecinku: „które są …”, „których średnia …”, „gdzie …”, złączone „i”/„albo”.
+    fn parse_comp_filter(&mut self, el: &Expr) -> R<Option<Expr>> {
+        let save = self.pos;
+        self.eat_p(",");
+        let Some(mut cond) = self.parse_pred_clause(el)? else {
+            self.pos = save;
+            return Ok(None);
+        };
+        loop {
+            let line = self.line();
+            let or = self.is_kw(Kw::Albo);
+            let next_ok = self.starts_operand(self.pos + 1)
+                || matches!(self.kw_at(1), Some(Kw::Iest))
+                || self.is_cmp_tail(1);
+            if !(or || self.is_kw(Kw::I) || self.is_kw(Kw::Oraz))
+                || !next_ok
+                || self.starts_simple(self.pos + 1)
+                || self.norm_at(1) == "a"
+            {
+                break;
+            }
+            self.pos += 1;
+            let next = match self.parse_pred_clause(el)? {
+                Some(c) => c,
+                None if self.starts_bare_cmp() => self.parse_cmp_with(el.clone())?,
+                None => self.parse_not()?,
+            };
+            cond = if or {
+                Expr::Or(Box::new(cond), Box::new(next), line)
+            } else {
+                Expr::And(Box::new(cond), Box::new(next), line)
+            };
+        }
+        Ok(Some(cond))
+    }
+
+    fn parse_pred_clause(&mut self, el: &Expr) -> R<Option<Expr>> {
+        let line = self.line();
+        let subject = match self.norm_at(0) {
+            "ktori" | "ktora" | "ktore" | "ktorzi" => {
+                self.pos += 1;
+                el.clone()
+            }
+            "co" if matches!(self.kw_at(1), Some(Kw::Iest | Kw::Nie)) || self.is_cmp_tail(1) => {
+                self.pos += 1;
+                el.clone()
+            }
+            "ktorego" | "ktorei" | "ktorich" => {
+                self.pos += 1;
+                if self.eat_kw(Kw::Dlugosc) {
+                    Expr::Un(UnOp::Len, Box::new(el.clone()), line)
+                } else {
+                    let (_, f) = self.resolve(self.pos)?;
+                    let Some(Found {
+                        kind: NK::Field(fid),
+                        len,
+                        ..
+                    }) = f
+                    else {
+                        return Err(self.expected("miána polá (np. «których średniá ieſt …»)"));
+                    };
+                    self.pos += len;
+                    Expr::Field(Box::new(el.clone()), fid, line)
+                }
+            }
+            "gdzie" => {
+                self.pos += 1;
+                return Ok(Some(self.parse_not()?));
+            }
+            _ if self.is_kw(Kw::Jesli) => {
+                self.pos += 1;
+                return Ok(Some(self.parse_not()?));
+            }
+            _ => return Ok(None),
+        };
+        let before = self.pos;
+        let e = self.parse_cmp_with(subject)?;
+        if self.pos == before {
+            return Err(self.expected("porównánia (np. «które ſą większe niż trzy»)"));
+        }
+        Ok(Some(e))
     }
 
     fn parse_or(&mut self) -> R<Expr> {
@@ -1582,6 +2039,7 @@ impl Parser {
                     | Kw::Ujemny
                     | Kw::Zawiera
                     | Kw::Przewyzsza
+                    | Kw::Ma
             )
         )
     }
@@ -1623,7 +2081,50 @@ impl Parser {
         Ok(if neg { Expr::Not(Box::new(e), line) } else { e })
     }
 
+    /// „iest pismem”, „iest liczbą całkowitą”, „iest Studentem” — rodzaj rzeczy.
+    fn type_word(&mut self) -> Option<i32> {
+        let (code, len) = match self.norm_at(0) {
+            "pismem" | "napisem" | "tekstem" => (3, 1),
+            "ulamkiem" => (2, 1),
+            "regestrem" | "reiestrem" => (4, 1),
+            "spisem" | "slownikiem" => (5, 1),
+            "nicoscia" => (0, 1),
+            "liczba" if self.norm_at(1) == "calkowita" => (7, 2),
+            // „liczbą” — chyba że Waszmość ma rzecz zwaną dokładnie tak
+            "liczba"
+                if !self
+                    .find_names(self.pos)
+                    .iter()
+                    .any(|f| f.exact && matches!(f.kind, NK::Var(_))) =>
+            {
+                (1, 1)
+            }
+            _ if self.is_kw(Kw::Prawda)
+                && self.kw_at(1) == Some(Kw::Albo)
+                && self.kw_at(2) == Some(Kw::Falsz) =>
+            {
+                (6, 3)
+            }
+            _ => match self.resolve(self.pos) {
+                Ok((
+                    Some(Found {
+                        kind: NK::Rod(rid),
+                        len,
+                        ..
+                    }),
+                    _,
+                )) => (100 + rid as i32, len),
+                _ => return None,
+            },
+        };
+        self.pos += len;
+        Some(code)
+    }
+
     fn cmp_tail(&mut self, l: Expr, after_is: bool, line: usize) -> R<Expr> {
+        if after_is && let Some(code) = self.type_word() {
+            return Ok(Expr::IsType(Box::new(l), code, line));
+        }
         let bin = |op, l: Expr, r: Expr| Expr::Bin(op, Box::new(l), Box::new(r), line);
         let un = |op, l: Expr| Expr::Un(op, Box::new(l), line);
         if let K::P(p) = self.peek().k {
@@ -1719,7 +2220,7 @@ impl Parser {
                 self.eat_kw(Kw::Regestr);
                 Ok(un(UnOp::Empty, l))
             }
-            Some(Kw::Zawiera) => {
+            Some(Kw::Zawiera) | Some(Kw::Ma) => {
                 self.pos += 1;
                 let r = self.parse_add()?;
                 Ok(bin(BinOp::Contains, l, r))
@@ -1754,6 +2255,23 @@ impl Parser {
             self.pos += 1;
             let r = self.parse_mul()?;
             l = Expr::Bin(op, Box::new(l), Box::new(r), line);
+        }
+        // „rok rzymskimi”, „po rzymsku”, „suma słownie”
+        loop {
+            let line = self.line();
+            let (op, len) = if self.norm_at(0) == "rzimskimi" {
+                (UnOp::Roman, 1)
+            } else if (self.norm_at(0) == "ciframi" && self.norm_at(1) == "rzimskimi")
+                || (self.is_kw(Kw::Po) && self.norm_at(1) == "rzimsku")
+            {
+                (UnOp::Roman, 2)
+            } else if self.norm_at(0) == "slownie" {
+                (UnOp::Words, 1)
+            } else {
+                break;
+            };
+            self.pos += len;
+            l = Expr::Un(op, Box::new(l), line);
         }
         Ok(l)
     }
@@ -1820,6 +2338,12 @@ impl Parser {
             {
                 // „czytane wspak”, „na wspak”
                 self.pos += 2;
+            } else if self.is_kw(Kw::Pod) && self.starts_operand_strict(self.pos + 1) {
+                // „ceny pod „chleb”” — wartość ze spisu
+                self.pos += 1;
+                let key = self.parse_primary()?;
+                e = Expr::Index(Box::new(e), Box::new(key), line);
+                continue;
             } else {
                 break;
             }
@@ -1992,10 +2516,34 @@ impl Parser {
                     self.pos += 1;
                     self.parse_list_rest(line)
                 }
+                Kw::Spis => {
+                    self.pos += 1;
+                    self.parse_dict_rest(line)
+                }
+                Kw::Kazdy => {
+                    self.pos += 1;
+                    self.parse_every(line)
+                }
+                Kw::Plik => {
+                    // „plik „kronika.txt” istnieje”
+                    self.pos += 1;
+                    let path = self.parse_postfix()?;
+                    let neg = self.is_kw(Kw::Nie) && self.norm_at(1) == "istnieie";
+                    if !neg && self.norm_at(0) != "istnieie" {
+                        return Err(self
+                            .expected("«iſtnieie» po miániu pliku (np. «plik „a.txt” iſtnieie»)"));
+                    }
+                    self.pos += 1 + usize::from(neg);
+                    let e = Expr::Builtin("sw_b_istnieje", vec![path], line);
+                    Ok(if neg { Expr::Not(Box::new(e), line) } else { e })
+                }
                 Kw::Pusty => {
                     self.pos += 1;
                     if self.eat_kw(Kw::Regestr) {
                         return Ok(Expr::List(Vec::new()));
+                    }
+                    if self.eat_kw(Kw::Spis) {
+                        return Ok(Expr::Dict(Vec::new(), line));
                     }
                     if self.norm_at(0).starts_with("pism") {
                         self.pos += 1;
@@ -2007,6 +2555,9 @@ impl Parser {
                     self.pos += 1;
                     if self.eat_kw(Kw::Regestr) {
                         return Ok(Expr::List(Vec::new()));
+                    }
+                    if self.eat_kw(Kw::Spis) {
+                        return Ok(Expr::Dict(Vec::new(), line));
                     }
                     self.parse_new(line)
                 }
@@ -2020,6 +2571,36 @@ impl Parser {
             };
         }
 
+        // „istnieje plik „kronika.txt””
+        if t.norm == "istnieie" && self.kw_at(1) == Some(Kw::Plik) {
+            self.pos += 2;
+            let path = self.parse_postfix()?;
+            return Ok(Expr::Builtin("sw_b_istnieje", vec![path], line));
+        }
+        // „klucze z cen”, „wartości z cen” — o ile Waszmość nie ma rzeczy tak zwanej
+        if (t.norm == "klucze" || t.norm == "wartosci")
+            && matches!(self.kw_at(1), Some(Kw::Z | Kw::W))
+            && !matches!(
+                self.resolve(self.pos),
+                Ok((
+                    Some(Found {
+                        kind: NK::Var(_),
+                        exact: true,
+                        ..
+                    }),
+                    _
+                ))
+            )
+        {
+            self.pos += 2;
+            let x = self.parse_postfix()?;
+            let f = if t.norm == "klucze" {
+                "sw_b_klucze"
+            } else {
+                "sw_b_wartosci"
+            };
+            return Ok(Expr::Builtin(f, vec![x], line));
+        }
         // „reszta z dzielenia a przez b”
         if t.norm.starts_with("reszt")
             && self.kw_at(1) == Some(Kw::Z)
@@ -2121,7 +2702,12 @@ impl Parser {
                         ));
                     }
                 }
-                args.push(self.parse_add()?);
+                // „złączenie miano człeka dla każdego człeka z gości przez „, ””
+                let arg = match self.try_comprehension()? {
+                    Some(e) => e,
+                    None => self.parse_add()?,
+                };
+                args.push(arg);
             }
         }
         let f = &self.funcs[fidx];
@@ -2163,6 +2749,52 @@ impl Parser {
             items.push(self.parse_add()?);
         }
         Ok(Expr::List(items))
+    }
+
+    /// „spis, gdzie „chleb” ma trzy, a „miód” ma pięć” albo sam „spis” (pusty).
+    fn parse_dict_rest(&mut self, line: usize) -> R<Expr> {
+        if self.eat_kw(Kw::Pusty) {
+            return Ok(Expr::Dict(Vec::new(), line));
+        }
+        let save = self.pos;
+        self.eat_p(",");
+        let intro = if self.norm_at(0) == "gdzie" || self.is_kw(Kw::Z) {
+            1
+        } else if self.is_kw(Kw::W) && self.norm_at(1) == "ktorim" {
+            2
+        } else {
+            0
+        };
+        if intro == 0 {
+            self.pos = save;
+            return Ok(Expr::Dict(Vec::new(), line));
+        }
+        self.pos += intro;
+        let mut pairs = Vec::new();
+        loop {
+            let k = self.parse_add()?;
+            if !(self.eat_kw(Kw::Ma) || self.eat_kw(Kw::Rowny)) {
+                return Err(
+                    self.expected("«ma» między kluczem á wártośćią (np. «„chleb” ma trzy»)")
+                );
+            }
+            let v = self.parse_add()?;
+            pairs.push((k, v));
+            // „…, „miód” ma pięć, a „wino” ma dwanaście”
+            let save = self.pos;
+            let comma = self.eat_p(",");
+            let conj = self.eat_kw(Kw::I) || self.eat_kw(Kw::Oraz);
+            if !conj && self.norm_at(0) == "a" {
+                self.pos += 1;
+            } else if !comma && !conj {
+                break;
+            }
+            if self.starts_verb(self.pos) || !self.starts_operand(self.pos) {
+                self.pos = save;
+                break;
+            }
+        }
+        Ok(Expr::Dict(pairs, line))
     }
 
     fn parse_new(&mut self, line: usize) -> R<Expr> {

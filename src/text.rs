@@ -28,7 +28,8 @@ pub fn normalize(word: &str) -> String {
 /// Końcówki fleksyjne (już znormalizowane), dłuższe przed krótszymi.
 const SUFFIXES: &[&str] = &[
     "iami", "ami", "iach", "ach", "iego", "ego", "iemu", "emu", "owie", "owi", "iom", "om", "iem",
-    "em", "imi", "ich", "iei", "ei", "im", "ow", "ia", "ie", "ii", "io", "iu", "a", "e", "i", "o", "u",
+    "em", "imi", "ich", "iei", "ei", "im", "ow", "ia", "ie", "ii", "io", "iu", "a", "e", "i", "o",
+    "u",
 ];
 
 /// Rdzeń znormalizowanego wyrazu: odcina jedną końcówkę, zostawiając co najmniej trzy litery.

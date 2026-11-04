@@ -8,13 +8,21 @@ use crate::ast::*;
 const RUNTIME: &str = include_str!("../runtime/sarmata.c");
 const TABLES_MARK: &str = "/*@@TABLICE@@*/";
 
+/// Początek pisma Waszmości w wydanym C — po nim nie ma już biegu.
+pub const PROGRAM_MARK: &str = "\n/* ─────────── pismo Waszmości ─────────── */\n";
+
 /// `pisma` to miana pism (główne i powołane księgi) do obwieszczeń grzechów biegu.
-pub fn generate(prog: &Program, pisma: &[String]) -> String {
+/// `zrodla`, jeśli podane, to treści tych pism: wtedy nad każdym zdaniem w C staje
+/// w komentarzu zdanie z pisma (przekład).
+pub fn generate(prog: &Program, pisma: &[String], zrodla: Option<&[String]>) -> String {
     let mut g = Gen {
         prog,
         lits: Vec::new(),
         lit_ids: HashMap::new(),
         tmp: 0,
+        proby: 0,
+        petle: Vec::new(),
+        zrodla: zrodla.map(|z| z.iter().map(|s| s.lines().collect()).collect()),
     };
 
     let mut funcs = String::new();
@@ -34,11 +42,16 @@ pub fn generate(prog: &Program, pisma: &[String]) -> String {
         out,
         "#define SW_WIERSZE_PISMA {}\nstatic const char *const sw_pisma[] = {{{}}};",
         crate::error::WIERSZE_PISMA,
-        pisma.iter().map(|p| c_string(p)).collect::<Vec<_>>().join(", ")
+        pisma
+            .iter()
+            .map(|p| c_string(p))
+            .collect::<Vec<_>>()
+            .join(", ")
     );
     out.push_str(tail);
 
-    out.push_str("\n/* ─────────── pismo Waszmości ─────────── */\n\n");
+    out.push_str(PROGRAM_MARK);
+    out.push('\n');
     let _ = writeln!(out, "static W sw_lit[{}];", g.lits.len().max(1));
     for (c, display) in &prog.globals {
         let _ = writeln!(out, "static W {c}; /* {} */", comment(display));
@@ -101,6 +114,11 @@ struct Gen<'a> {
     lits: Vec<String>,
     lit_ids: HashMap<String, usize>,
     tmp: usize,
+    /// Ile «Spróbuj» otwartych w bieżącym uczynku — tyle trzeba zdjąć przy «Zwróć».
+    proby: usize,
+    /// Głębokość prób przy wejściu w każdą otwartą pętlę (dla «Przerwij»/«Dalej»).
+    petle: Vec<usize>,
+    zrodla: Option<Vec<Vec<&'a str>>>,
 }
 
 /// Miejsce rozłożone na: przygotowanie, odczyt i wzór zapisu (`@@` = nowa wartość).
@@ -108,6 +126,18 @@ struct PlaceCode {
     prelude: Vec<String>,
     get: String,
     set: String,
+}
+
+fn has_try(stmts: &[Stmt]) -> bool {
+    stmts.iter().any(|s| match s {
+        Stmt::Try { .. } => true,
+        Stmt::If(arms, els, _) => {
+            arms.iter().any(|(_, b)| has_try(b)) || els.as_deref().is_some_and(has_try)
+        }
+        Stmt::While(_, b, _) | Stmt::Forever(b) | Stmt::Repeat(_, b, _) => has_try(b),
+        Stmt::ForRange { body, .. } | Stmt::ForEach { body, .. } => has_try(body),
+        _ => false,
+    })
 }
 
 impl Gen<'_> {
@@ -177,15 +207,23 @@ impl Gen<'_> {
     fn function(&mut self, out: &mut String, f: &FuncDef) {
         let sig = &self.prog.sigs[f.index];
         let _ = writeln!(out, "/* uczynek „{}” */", comment(&sig.display));
+        // Po longjmp zmienne nie-volatile mogą mieć wartości z sufitu.
+        let vol = if has_try(&f.body) { "volatile " } else { "" };
+        let params: Vec<String> = f.params.iter().map(|p| format!("{vol}W {p}")).collect();
         let _ = writeln!(
             out,
             "static W {}({}) {{",
             sig.cname,
-            params_decl(sig.arity, Some(&f.params))
+            if params.is_empty() {
+                "void".to_string()
+            } else {
+                params.join(", ")
+            }
         );
         for (c, display) in &f.locals {
-            let _ = writeln!(out, "    W {c} = SW_NIC; /* {} */", comment(display));
+            let _ = writeln!(out, "    {vol}W {c} = SW_NIC; /* {} */", comment(display));
         }
+        self.proby = 0;
         self.block(out, &f.body, 1);
         out.push_str("    return SW_NIC;\n}\n\n");
     }
@@ -251,6 +289,8 @@ impl Gen<'_> {
                     UnOp::Negative => "sw_ujemne",
                     UnOp::Reverse => "sw_wspak",
                     UnOp::Len => "sw_dlugosc",
+                    UnOp::Roman => "sw_rzymskie",
+                    UnOp::Words => "sw_slownie",
                 };
                 format!("{f}({}, {l})", self.expr(a))
             }
@@ -264,7 +304,27 @@ impl Gen<'_> {
                 format!("sw_sad(sw_prawdziwe({a}, {l}) || sw_prawdziwe({b}, {l}))")
             }
             Expr::Call(i, args) => format!("{}({})", self.prog.sigs[*i].cname, self.args(args)),
+            Expr::Builtin(f, args, l) if args.is_empty() => format!("{f}({l})"),
             Expr::Builtin(f, args, l) => format!("{f}({}, {l})", self.args(args)),
+            Expr::IsType(a, code, l) => format!("sw_jest_typu({}, {code}, {l})", self.expr(a)),
+            Expr::Dict(pairs, l) => {
+                if pairs.is_empty() {
+                    "sw_spis_nowy()".to_string()
+                } else {
+                    let flat: Vec<Expr> = pairs
+                        .iter()
+                        .flat_map(|(k, v)| [k.clone(), v.clone()])
+                        .collect();
+                    format!("sw_spis_z({}, {}, {l})", pairs.len(), self.array(&flat))
+                }
+            }
+            Expr::Comp {
+                var,
+                src,
+                map,
+                filter,
+                line: l,
+            } => self.comprehension(var, src, map.as_deref(), filter.as_deref(), *l),
             Expr::Index(c, i, l) => {
                 let (c, i) = (self.expr(c), self.expr(i));
                 format!("sw_element({c}, {i}, {l})")
@@ -302,6 +362,88 @@ impl Gen<'_> {
                 }
             }
         }
+    }
+
+    fn comprehension(
+        &mut self,
+        var: &str,
+        src: &CompSrc,
+        map: Option<&Expr>,
+        filter: Option<&Expr>,
+        l: usize,
+    ) -> String {
+        let r = self.fresh();
+        let head = match src {
+            CompSrc::Each(coll) => {
+                let (c, k) = (self.fresh(), self.fresh());
+                let ce = self.expr(coll);
+                format!(
+                    "W {c} = {ce}; for (long long {k} = 0; {k} < sw_iter_dl({c}, {l}); {k}++) {{ {var} = sw_iter_el({c}, {k}, {l});"
+                )
+            }
+            CompSrc::Range(from, to, step) => {
+                let (a, b, st, k) = (self.fresh(), self.fresh(), self.fresh(), self.fresh());
+                let fe = self.expr(from);
+                let te = self.expr(to);
+                let se = match step {
+                    Some(s) => format!("sw_calk({}, {l})", self.expr(s)),
+                    None => match (&**from, &**to) {
+                        (Expr::Int(x), Expr::Int(y)) if x > y => "-1".to_string(),
+                        _ => "1".to_string(),
+                    },
+                };
+                format!(
+                    "long long {a} = sw_calk({fe}, {l}), {b} = sw_calk({te}, {l}), {st} = {se}; \
+                     if ({st} == 0) sw_grzech({l}, \"Krok równy zeru — regestr nie miałby końcá.\"); \
+                     for (long long {k} = {a}; {st} > 0 ? {k} <= {b} : {k} >= {b}; {k} += {st}) {{ {var} = sw_liczba({k});"
+                )
+            }
+        };
+        let item = map.map_or_else(|| var.to_string(), |m| self.expr(m));
+        let put = match filter {
+            Some(f) => format!(
+                "if (sw_prawdziwe({}, {l})) sw_wloz({r}, {item});",
+                self.expr(f)
+            ),
+            None => format!("sw_wloz({r}, {item});"),
+        };
+        format!("({{ W {r} = sw_regestr_nowy(); {head} {put} }} {r}; }})")
+    }
+
+    /// Zdanie z pisma w komentarzu nad jego przekładem.
+    fn mark(&self, out: &mut String, ind: &str, first: usize, last: usize) {
+        let Some(zrodla) = &self.zrodla else {
+            return;
+        };
+        let w = crate::error::WIERSZE_PISMA;
+        let (id, a, b) = (first / w, first % w, last % w);
+        let Some(lines) = zrodla.get(id) else {
+            return;
+        };
+        let text: Vec<&str> = (a.max(1)..=b.max(a))
+            .filter_map(|i| lines.get(i - 1))
+            .map(|s| s.trim())
+            .filter(|s| !s.is_empty())
+            .collect();
+        if !text.is_empty() {
+            let _ = writeln!(out, "{ind}/* {} */", comment(&text.join(" ")));
+        }
+    }
+
+    /// Ile prób zdjąć przy wyjściu z pętli przez «Przerwij» albo «Dalej».
+    fn unwind_loop(&self) -> String {
+        let k = self.proby - self.petle.last().copied().unwrap_or(0);
+        if k > 0 {
+            format!("sw_proby_n -= {k}; ")
+        } else {
+            String::new()
+        }
+    }
+
+    fn loop_body(&mut self, out: &mut String, body: &[Stmt], d: usize) {
+        self.petle.push(self.proby);
+        self.block(out, body, d);
+        self.petle.pop();
     }
 
     fn place(&mut self, p: &Place) -> PlaceCode {
@@ -377,7 +519,13 @@ impl Gen<'_> {
                 let pc = self.place(p);
                 let v = self.expr(v);
                 let tv = self.fresh();
-                let newv = format!("{f}({}, {tv}, {l})", pc.get);
+                // Klucza w spisie może jeszcze nie być: wtedy zaczyna się od zera.
+                let get = if matches!(p, Place::Index(..)) {
+                    format!("sw_zaczatek({}, {tv}, {})", pc.get, *op as i32)
+                } else {
+                    pc.get
+                };
+                let newv = format!("{f}({get}, {tv}, {l})");
                 line(
                     out,
                     &format!(
@@ -437,12 +585,12 @@ impl Gen<'_> {
             Stmt::While(cond, body, l) => {
                 let c = self.expr(cond);
                 line(out, &format!("while (sw_prawdziwe({c}, {l})) {{"));
-                self.block(out, body, d + 1);
+                self.loop_body(out, body, d + 1);
                 line(out, "}");
             }
             Stmt::Forever(body) => {
                 line(out, "for (;;) {");
-                self.block(out, body, d + 1);
+                self.loop_body(out, body, d + 1);
                 line(out, "}");
             }
             Stmt::ForRange {
@@ -484,7 +632,7 @@ impl Gen<'_> {
                     ),
                 );
                 line(out, &format!("    {var} = sw_liczba({k});"));
-                self.block(out, body, d + 1);
+                self.loop_body(out, body, d + 1);
                 line(out, "} }");
             }
             Stmt::ForEach {
@@ -501,7 +649,7 @@ impl Gen<'_> {
                     &format!("  for (long long {k} = 0; {k} < sw_iter_dl({c}, {l}); {k}++) {{"),
                 );
                 line(out, &format!("    {var} = sw_iter_el({c}, {k}, {l});"));
-                self.block(out, body, d + 1);
+                self.loop_body(out, body, d + 1);
                 line(out, "} }");
             }
             Stmt::Repeat(n, body, l) => {
@@ -512,15 +660,55 @@ impl Gen<'_> {
                     out,
                     &format!("  for (long long {k} = 0; {k} < {cnt}; {k}++) {{"),
                 );
-                self.block(out, body, d + 1);
+                self.loop_body(out, body, d + 1);
                 line(out, "} }");
             }
-            Stmt::Break => line(out, "break;"),
-            Stmt::Continue => line(out, "continue;"),
+            Stmt::Break => line(out, &format!("{}break;", self.unwind_loop())),
+            Stmt::Continue => line(out, &format!("{}continue;", self.unwind_loop())),
             Stmt::Return(v) => {
                 let v = v.as_ref().map_or("SW_NIC".to_string(), |e| self.expr(e));
-                line(out, &format!("return {v};"));
+                if self.proby > 0 {
+                    let t = self.fresh();
+                    line(
+                        out,
+                        &format!(
+                            "{{ W {t} = {v}; sw_proby_n -= {}; return {t}; }}",
+                            self.proby
+                        ),
+                    );
+                } else {
+                    line(out, &format!("return {v};"));
+                }
             }
+            Stmt::Try {
+                body,
+                catch_var,
+                handler,
+                ..
+            } => {
+                line(out, "if (setjmp(*sw_proba_wejdz()) == 0) {");
+                self.proby += 1;
+                self.block(out, body, d + 1);
+                self.proby -= 1;
+                line(out, "    sw_proba_wyjdz();");
+                line(out, "} else {");
+                if let Some(v) = catch_var {
+                    line(out, &format!("    {v} = sw_bieda;"));
+                }
+                if let Some(h) = handler {
+                    self.block(out, h, d + 1);
+                }
+                line(out, "}");
+            }
+            Stmt::Throw(v, l) => {
+                let v = self.expr(v);
+                line(out, &format!("sw_rzuc({v}, {l});"));
+            }
+            Stmt::Exit(v, l) => {
+                let v = self.expr(v);
+                line(out, &format!("sw_zakoncz({v}, {l});"));
+            }
+            Stmt::Mark(first, last) => self.mark(out, &ind, *first, *last),
             Stmt::Expr(e) => {
                 let e = self.expr(e);
                 line(out, &format!("(void){e};"));

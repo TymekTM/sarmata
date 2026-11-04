@@ -28,8 +28,13 @@ cargo build --release
 ./target/release/sarmata przyklady/silnia.sar          # tworzy plik wykonywalny ./silnia
 ./target/release/sarmata przyklady/silnia.sar -o silnia
 ./target/release/sarmata uruchom przyklady/silnia.sar  # kompiluje i od razu uruchamia
-./target/release/sarmata c przyklady/silnia.sar        # pokazuje wygenerowany kod C
+./target/release/sarmata przekład przyklady/silnia.sar # C zdanie po zdaniu, z pismem w komentarzach
+./target/release/sarmata c przyklady/silnia.sar        # cały wygenerowany kod C, z biegiem
+./target/release/sarmata rozmowa                       # REPL: pisz zdania, skryba odpowiada
 ```
+
+Kolorowanie składni dla VS Code leży w `edytory/vscode/` (skopiuj katalog do
+`~/.vscode/extensions/sarmata`). Gramatykę wypisuje `sarmata gramatyka`.
 
 Inny kompilator C wskazuje się zmienną `CC`. Testy: `cargo test` (przepuszcza każdy przykład
 z `przyklady/` i porównuje wynik z plikiem `.oczekiwane`).
@@ -183,7 +188,58 @@ w dowolnym miejscu programu, także po wywołaniu.
 **Wbudowane:** `pierwiastek`, `wartość bezwzględna`, `zaokrąglenie`, `część całkowita`,
 `wartość liczbowa`, `losowa liczba od a do b`, `wielkie litery`, `małe litery`,
 `rozbiór` (dzieli pismo na słowa), `rozcięcie x przez „;”` (tnie po znaku), `treść pliku`, `wiersze pliku`, `największy`,
-`najmniejszy`, `kopia`, `złączenie x przez „, ”`.
+`najmniejszy`, `kopia`, `złączenie x przez „, ”`, `rodzaj`, `klucze z`, `wartości z`,
+`zawartość katalogu`, `słowa wywołania`.
+
+### Spisy (słowniki)
+
+```
+Niechay ceny będą spisem, gdzie „chleb” ma trzy, „miód” ma pięć, a „wino” ma dwanaście.
+Obwieść ceny pod „miód”.
+Zwiększ ceny pod „sól” o ieden.             (brakujący klucz zaczyna od zera)
+Ieśli ceny maią „wino”, usuń „wino” z cen.
+Obwieść klucze z cen, wartości z cen.
+```
+
+### Regestry składane
+
+```
+Niechay kwadraty będą x razy x dla każdego x od iednego do dziesięciu.
+Niechay duże będą wszystkie liczby, które są większe niż cztery.
+Niechay mądrzy będą wszyscy z żaków, których średnia iest większa niż cztery.
+```
+
+### Próby i klątwy (wyjątki)
+
+```
+Spróbuy:
+    Obwieść dzielenie z dziesięciu i zera.
+A w razie biedy, zwaney nieszczęściem:
+    Obwieść „Biada! Rzekli:”, nieszczęście.
+
+Rzuć klątwę „Przez zero dzielić nie przystoi.”
+```
+
+Próba łapie klątwy rzucone przez `Rzuć` i grzechy biegu (dzielenie przez zero, element
+poza regestrem…). Klątwa niezłapana kończy program: *„Klątwá nie zdięta: …”*.
+
+### Rodzaje, liczby rzymskie i słowne
+
+```
+Ieśli x iest liczbą całkowitą: …            (też: pismem, regestrem, spisem, Żakiem…)
+Obwieść „Anno {rok rzymskimi}”.              → Anno MDCX
+Obwieść suma słownie.                        → dwá tyśiące dwádźieśćiá ſześć
+```
+
+### Pliki, wywołanie, koniec
+
+```
+Ieśli plik „raport.txt” istnieie, usuń plik „raport.txt”.
+Utwórz katalog „kronika”.
+Przenieś plik „a.txt” do „kronika/a.txt”.
+Obwieść zawartość katalogu „kronika”, słowa wywołania.
+Zakończ z kodem trzy.
+```
 
 ### Rody (struktury)
 
@@ -233,11 +289,13 @@ Błędy w trakcie działania też mają swoje kazania:
 | `przyklady/pierwsze.sar` | liczby pierwsze do stu |
 | `przyklady/palindrom.sar` | wczytywanie i pisma wspak |
 | `przyklady/sortowanie.sar` | sortowanie bąbelkowe |
+| `przyklady/karczma.sar` | kronika karczmy: spis cen, klątwy za niezapłacone trunki, regestry składane, plik z długami |
 | `przyklady/baszta.sar` | opowieść o oblężonej baszcie; pod spodem problem Józefa Flawiusza i racjonowanie chleba |
 | `przyklady/dziennik/dziennik.sar` | projekt semestralny: dziennik ocen z menu, plikiem, rodem i rankingiem; ród i uczynki w księdze `żacy.sar` |
 
 ## Budowa skryby
 
 `src/lexer.rs` (słowa i wcięcia) → `src/powolania.rs` (wplata powołane księgi) → `src/parser.rs` (zdania, miana po rdzeniach) →
-`src/codegen.rs` (C) + `runtime/sarmata.c` (bieg: wartości dynamiczne, regestry, rody) → `cc`.
+`src/codegen.rs` (C) + `runtime/sarmata.c` (bieg: wartości dynamiczne, regestry, spisy, rody,
+próby na `setjmp`/`longjmp`) → `cc`. `src/gramatyka.rs` wywodzi ze słownika gramatykę dla edytorów.
 Pamięci się nie zwalnia, albowiem szlachta ziemi raz zdobytej nie oddaje.

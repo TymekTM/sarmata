@@ -1,0 +1,32 @@
+{
+  "name": "sarmata",
+  "displayName": "Sarmata",
+  "description": "Kolorowanie składni dla języka Sarmata — programów pisanych staropolszczyzną.",
+  "version": "0.1.0",
+  "publisher": "TymekTM",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TymekTM/sarmata"
+  },
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "sarmata",
+        "aliases": ["Sarmata", "sarmata"],
+        "extensions": [".sar"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "sarmata",
+        "scopeName": "source.sarmata",
+        "path": "./syntaxes/sarmata.tmLanguage.json"
+      }
+    ]
+  }
+}

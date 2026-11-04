@@ -16,13 +16,12 @@ type R<T> = Result<T, CompileError>;
 const TERMINATORS: &[&str] = &[".", "!", "?", ";", ":"];
 const POWOLANIE: &str = "Powołanie piſze ſię ták: «Powołuiąc ſię ná „kſięgá.sar”.»";
 
-/// Czyta pismo główne wraz ze wszystkimi powołanymi księgami. Zwraca słowa gotowe
-/// dla parsera i miana pism (do obwieszczeń grzechów biegu).
-pub fn zbierz(path: &Path) -> Result<(Vec<Token>, Vec<Pismo>), String> {
-    let src = std::fs::read_to_string(path)
-        .map_err(|e| format!("Piſmá „{}” odczytáć nie ſpoſób: {e}", path.display()))?;
+/// Czyta pismo główne (podane treścią) wraz ze wszystkimi powołanymi księgami. Zwraca
+/// słowa gotowe dla parsera i pisma (do obwieszczeń grzechów). Ścieżki ksiąg liczy się
+/// od katalogu, w którym leży `path`.
+pub fn zbierz(path: &Path, shown: String, src: String) -> Result<(Vec<Token>, Vec<Pismo>), String> {
     let mut z = Zbieracz::default();
-    match z.pismo(path, path.display().to_string(), src, false) {
+    match z.pismo(path, shown, src, false) {
         Ok(toks) => Ok((toks, z.pisma)),
         Err(e) => Err(error::render(&e, &z.pisma)),
     }
@@ -39,7 +38,8 @@ struct Zbieracz {
 impl Zbieracz {
     fn pismo(&mut self, path: &Path, shown: String, src: String, ksiega: bool) -> R<Vec<Token>> {
         let id = self.pisma.len();
-        self.kanony.push(path.canonicalize().unwrap_or_else(|_| path.to_path_buf()));
+        self.kanony
+            .push(path.canonicalize().unwrap_or_else(|_| path.to_path_buf()));
         self.pisma.push(Pismo { shown, src });
         self.stos.push(id);
         let toks = lexer::lex(&self.pisma[id].src, id * WIERSZE_PISMA)?;
@@ -67,7 +67,10 @@ impl Zbieracz {
                             // Reszty (kropki i końca) nie bierzemy: parser zobaczy «Amen.»
                             // dopiero na końcu pisma głównego.
                             if toks.get(i + 2).is_some_and(|n| n.k != K::Eof) {
-                                return Err(at(&toks[i + 2], "Po «Amen.» nic iuż piſáć nie przyſtoi."));
+                                return Err(at(
+                                    &toks[i + 2],
+                                    "Po «Amen.» nic iuż piſáć nie przyſtoi.",
+                                ));
                             }
                             self.stos.pop();
                             return Ok(out);
@@ -88,7 +91,10 @@ impl Zbieracz {
                 K::Indent => depth += 1,
                 K::Dedent => depth -= 1,
                 K::Eof if ksiega => {
-                    return Err(at(t, "Kſięgá też kończy ſię modlitwą — brák «Amen.» ná końcu."));
+                    return Err(at(
+                        t,
+                        "Kſięgá też kończy ſię modlitwą — brák «Amen.» ná końcu.",
+                    ));
                 }
                 _ => {}
             }
@@ -103,8 +109,12 @@ impl Zbieracz {
 
     /// Wczytuje księgę, o której mówi cytat `name`. Księgę już wczytaną pomija.
     fn ksiega(&mut self, dir: &Path, name: &Token) -> R<Vec<Token>> {
-        let K::Str(parts) = &name.k else { unreachable!() };
-        let StrPart::Lit(rel) = &parts[0] else { unreachable!() };
+        let K::Str(parts) = &name.k else {
+            unreachable!()
+        };
+        let StrPart::Lit(rel) = &parts[0] else {
+            unreachable!()
+        };
         let mut path = dir.join(rel);
         if path.extension().is_none() {
             path.set_extension("sar");
@@ -119,7 +129,10 @@ impl Zbieracz {
                     .collect();
                 return Err(at(
                     name,
-                    format!("Błędne koło powołań: {}. Kſięgá nie może powoływáć ſámey śiebie.", kolo.join(" → ")),
+                    format!(
+                        "Błędne koło powołań: {}. Kſięgá nie może powoływáć ſámey śiebie.",
+                        kolo.join(" → ")
+                    ),
                 ));
             }
             return Ok(Vec::new());

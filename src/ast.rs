@@ -29,6 +29,17 @@ pub enum UnOp {
     Negative,
     Reverse,
     Len,
+    /// „rok rzymskimi” — pismo z liczbą rzymską.
+    Roman,
+    /// „suma słownie” — pismo z liczebnikiem.
+    Words,
+}
+
+/// Skąd bierze elementy regestr składany w locie.
+#[derive(Clone, Debug)]
+pub enum CompSrc {
+    Each(Box<Expr>),
+    Range(Box<Expr>, Box<Expr>, Option<Box<Expr>>),
 }
 
 #[derive(Clone, Debug)]
@@ -56,6 +67,19 @@ pub enum Expr {
     /// Regestr o długości N pełen X (X liczony osobno dla każdego miejsca).
     Fill(Box<Expr>, Box<Expr>, usize),
     New(usize, Vec<(usize, Expr)>, usize),
+    /// Spis z par (klucz, wartość).
+    Dict(Vec<(Expr, Expr)>, usize),
+    /// Regestr składany w locie: „x razy x dla każdego x z liczb, które są parzyste”.
+    /// Bez `map` bierze się sam element.
+    Comp {
+        var: String,
+        src: CompSrc,
+        map: Option<Box<Expr>>,
+        filter: Option<Box<Expr>>,
+        line: usize,
+    },
+    /// Czy rzecz jest danego rodzaju (zob. `sw_jest_typu` w biegu).
+    IsType(Box<Expr>, i32, usize),
 }
 
 #[derive(Clone, Debug)]
@@ -122,6 +146,16 @@ pub enum Stmt {
         append: bool,
         line: usize,
     },
+    /// „Spróbuj: … A w razie biedy, zwanej X: …”
+    Try {
+        body: Vec<Stmt>,
+        catch_var: Option<String>,
+        handler: Option<Vec<Stmt>>,
+    },
+    Throw(Expr, usize),
+    Exit(Expr, usize),
+    /// Znacznik zdania z pisma (wiersz pierwszy i ostatni) — dla przekładu, w C pusty.
+    Mark(usize, usize),
 }
 
 #[derive(Clone, Debug)]

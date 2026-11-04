@@ -250,7 +250,10 @@ fn lex_chars(chars: &[char], line: usize, col_off: usize, out: &mut Vec<Token>) 
                     raw.chars().count(),
                     format!(
                         "Podkreślnik w „{raw}” to wynalazek bezbożny. Pisz miano osobnymi słowami: «{}» — wtedy i odmiana zadziała.",
-                        raw.split('_').filter(|s| !s.is_empty()).collect::<Vec<_>>().join(" ")
+                        raw.split('_')
+                            .filter(|s| !s.is_empty())
+                            .collect::<Vec<_>>()
+                            .join(" ")
                     ),
                 ));
             }

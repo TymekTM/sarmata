@@ -1,0 +1,75 @@
+Tytuł: Kronika karczmy „Pod Złotym Kogutem”, gdzie długi kredą na belce spisywano.
+
+Anno Domini MDCXXV, w zapusty, karczmarz Mośko trzymał rachunek trunków w spisie,
+á kto płacić nie miał czym, na tego klątwę rzucano i do belki dopisywano.
+
+
+Rozdział pierwszy, w którym karczmarz cennik wywiesza.
+
+Ród Gość ma miano, kiesę i pragnienie.
+
+Niechay cennik będzie spisem, gdzie „piwo” ma dwa, „miód” ma pięć, „gorzałka” ma trzy,
+    á „węgrzyn” ma dwanaście.
+Niechay belka będzie spisem pustym.
+Niechay rok będzie 1625.
+
+Opowiada kronikarz: „Anno {rok rzymskimi} wywieszono cennik: {cennik}.”
+Opowiada kronikarz: „Trunków iest {długość cennika}, á naydroższy kosztuie
+    {naywiększy z wartości z cennika} groszy.”
+
+
+Rozdział wtóry, w którym schodzą się goście.
+
+Niechay goście będą regestrem pustym.
+Dodaj nowego Gościa o mianie „pan Zagłoba”, kiesie równey dwóm i pragnieniu równym „węgrzyn”
+    do gości.
+Dodaj nowego Gościa o mianie „Rzędzian”, kiesie równey dziesięciu i pragnieniu równym „miód”
+    do gości.
+Dodaj nowego Gościa o mianie „Kmicic”, kiesie równey ieden i pragnieniu równym „gorzałka”
+    do gości.
+Dodaj nowego Gościa o mianie „Wołodyiowski”, kiesie równey ośmiu i pragnieniu równym „kwas”
+    do gości.
+
+Niechay spłukani będą wszyscy z gości, których kiesa iest mnieysza niż trzy.
+Opowiada kronikarz: „Mośko spoyrzał po izbie i od razu wiedział, że kłopot będzie z tymi:
+    {złączenie miano człeka dla każdego człeka ze spłukanych przez „, ”}.”
+
+
+Rozdział trzeci, w którym się pije i awanturuie.
+
+Uczynek obsłużenie, przyimuiący gościa:
+    Niechay cena będzie cennikiem pod pragnieniem gościa.
+    Ieśli cena iest nicością:
+        Rzuć klątwę „Takiego trunku, iak {pragnienie gościa}, tu nie szynkuią.”
+    Ieśli cena iest większa niż kiesa gościa:
+        Zwiększ belkę pod mianem gościa o cenę.
+        Rzuć klątwę „{miano gościa} nie ma czym zapłacić — dopisano do belki.”
+    Zmniejsz kiesę gościa o cenę.
+    Oddaj cenę.
+
+Niechay utarg będzie zerem.
+Dla każdego gościa z gości:
+    Spróbuy:
+        Niechay zapłata będzie obsłużeniem z gościa.
+        Zwiększ utarg o zapłatę.
+        Opowiada kronikarz: „{miano gościa} wypił {pragnienie gościa} i zapłacił {zapłata}.”
+    A w razie biedy, zwaney awanturą:
+        Opowiada kronikarz: „Wrzawa w karczmie! {awantura}”.
+
+
+Rozdział czwarty, w którym się liczy.
+
+Opowiada kronikarz: „Utargu było {utarg} groszy, słownie: {utarg słownie}.”
+Ieśli belka iest spisem i belka nie iest pusta:
+    Zapisz „Belka z zapustów roku {rok rzymskimi}:” do pliku „raport.txt”.
+    Dla każdego dłużnika z belki:
+        Dopisz „{dłużnik} — groszy {belka pod dłużnikiem}” do pliku „raport.txt”.
+
+Ieśli plik „raport.txt” istnieie:
+    Obwieść treść pliku „raport.txt”.
+    Usuń plik „raport.txt”.
+
+Niechay długie będą wszystkie klucze z cennika, których długość iest większa niż cztery.
+Opowiada kronikarz: „Na przyszły rok Mośko kazał przemalować {długie}.”
+
+Amen.

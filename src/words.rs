@@ -39,6 +39,12 @@ pub enum Kw {
     Razy,
     Przerwij,
     Pomin,
+    // próby i klątwy
+    Sprobuj,
+    Biada,
+    Zwany,
+    Rzuc,
+    Zakoncz,
     // przyimki
     Od,
     Do,
@@ -48,6 +54,7 @@ pub enum Kw {
     O,
     Na,
     Przez,
+    Pod,
     // uczynki i rody
     Uczynek,
     Przyjmujacy,
@@ -71,6 +78,8 @@ pub enum Kw {
     Zapisz,
     Dopisz,
     Plik,
+    Utworz,
+    Przenies,
     // logika
     Nie,
     I,
@@ -112,6 +121,7 @@ pub enum Kw {
     Regestr,
     Pelen,
     Wspak,
+    Spis,
     // spójniki zdań
     Potem,
     Po,
@@ -351,7 +361,8 @@ pub static KEYWORDS: LazyLock<HashMap<String, Kw>> = LazyLock::new(|| {
         Zawsze,
     );
     add(&mut m, &["dla"], Dla);
-    add_adj(&mut m, &["każd", "wszelk", "wszystk"], Kazdy);
+    add_adj(&mut m, &["każd", "wszelk", "wszystk", "wszytk"], Kazdy);
+    add(&mut m, &["wszyscy", "wszytcy"], Kazdy);
     add(&mut m, &["powtórz", "powtórzże"], Powtorz);
     add(&mut m, &["razy", "raz"], Razy);
     add(
@@ -361,6 +372,18 @@ pub static KEYWORDS: LazyLock<HashMap<String, Kw>> = LazyLock::new(|| {
     );
     add(&mut m, &["pomiń", "dalej", "opuść"], Pomin);
 
+    add(&mut m, &["spróbuj", "spróbujże", "próbuj"], Sprobuj);
+    add(
+        &mut m,
+        &[
+            "biada", "bieda", "biedy", "biedzie", "biedę", "klęska", "klęski", "klęsce", "klęskę",
+        ],
+        Biada,
+    );
+    add_adj(&mut m, &["zwan", "nazwan", "nazywan"], Zwany);
+    add(&mut m, &["rzuć", "rzućże", "ciśnij", "miotnij"], Rzuc);
+    add(&mut m, &["zakończ", "zakończże", "skończ"], Zakoncz);
+
     add(&mut m, &["od", "ode"], Od);
     add(&mut m, &["do"], Do);
     add(&mut m, &["co"], Co);
@@ -369,6 +392,7 @@ pub static KEYWORDS: LazyLock<HashMap<String, Kw>> = LazyLock::new(|| {
     add(&mut m, &["o"], O);
     add(&mut m, &["na"], Na);
     add(&mut m, &["przez"], Przez);
+    add(&mut m, &["pod"], Pod);
 
     add(&mut m, &["uczynek", "powinność"], Uczynek);
     add_adj(&mut m, &["przyjmując", "biorąc", "żądając"], Przyjmujacy);
@@ -401,6 +425,8 @@ pub static KEYWORDS: LazyLock<HashMap<String, Kw>> = LazyLock::new(|| {
         &["plik", "pliku", "plikiem", "pliki", "plików"],
         Plik,
     );
+    add(&mut m, &["utwórz", "stwórz", "załóż"], Utworz);
+    add(&mut m, &["przenieś", "przesuń"], Przenies);
 
     add(&mut m, &["nie"], Nie);
     add(&mut m, &["i"], I);
@@ -521,6 +547,23 @@ pub static KEYWORDS: LazyLock<HashMap<String, Kw>> = LazyLock::new(|| {
     add(&mut m, &["pełen"], Pelen);
     add_adj(&mut m, &["pełn", "wypełnion"], Pelen);
     add(&mut m, &["wspak"], Wspak);
+    add(
+        &mut m,
+        &[
+            "spis",
+            "spisu",
+            "spisem",
+            "spisie",
+            "spisy",
+            "spisów",
+            "słownik",
+            "słownika",
+            "słownikiem",
+            "słowniku",
+            "słowniki",
+        ],
+        Spis,
+    );
 
     add(
         &mut m,

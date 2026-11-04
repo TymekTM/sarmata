@@ -30,10 +30,10 @@ Uczynek wczytanie żaków z kroniki:
 
 Rozdział trzeci, o okazywaniu.
 
-Uczynek okazanie rankingu, przyimuiący spis:
-    Posortuj spis według średniey malejąco.
+Uczynek okazanie rankingu, przyimuiący listę:
+    Posortuj listę według średniey malejąco.
     Niechay mieysce będzie ieden.
-    Dla każdego żaka ze spisu:
+    Dla każdego żaka z listy:
         Obwieść „{mieysce}. {miano żaka} {nazwisko żaka} — średnia {średnia żaka}”.
         Zwiększ mieysce.
 
