@@ -1,0 +1,10 @@
+Przedmowa. Pieśń o silni, to iest o mnożeniu wszytkich liczb aż do zadaney.
+
+Uczynek silnia, przyimuiący liczbę:
+    Ieśli liczba iest mnieysza niż dwa, oddaj ieden.
+    Oddaj liczbę razy silnię z liczby bez iednego.
+
+Dla każdego n od iednego do dziesięciu czyń:
+    Obwieść „Silnia z {n} wynosi {silnia z n}.”
+
+Amen.

@@ -1,0 +1,76 @@
+Tytuł: Opowieść o baszcie pod Smoleńskiem, z którey rota pana Zbigniewa posłańców słała.
+
+Anno Domini MDCX, iesienią, kiedy Król Iegomość Smoleńsk oblegał, stała na przedpolu
+stara baszta, á w niey ośmiu towarzyszy z rotmistrzem Zbigniewem. Moskwa
+zamknęła ich dokoła, chleba było mało, á do obozu królewskiego żadna wieść nie szła.
+
+
+Rozdział pierwszy, w którym poznaiemy rotę.
+
+Zapisano na karcie tytułowey: „Opowieść o baszcie pod Smoleńskiem”, á potem obwieść.
+
+Niechay szereg będzie regestrem z „Ian”, „Stach”, „Maciek”, „Woyciech”, „Bartosz”,
+    „Iakub”, „Mikołay” i „Szymon”.
+Niechay posłańcy będą regestrem pustym.
+Niechay strażnik będzie nicością.
+Niechay sucharów będzie trzydzieści.
+Niechay dzień będzie dziesięć.
+
+Niechay liczebniki będą regestrem z „został w baszcie ieden towarzysz”,
+    „stanęło w kole dwóch towarzyszy”, „stanęło w kole trzech towarzyszy”,
+    „stanęło w kole czterech towarzyszy”, „stanęło w kole pięciu towarzyszy”,
+    „stanęło w kole sześciu towarzyszy”, „stanęło w kole siedmiu towarzyszy”
+    i „stanęło w kole ośmiu towarzyszy”.
+
+Uczynek policzenie głów, przyimuiące gromadę:
+    Oddaj element długości gromady z liczebników.
+
+
+Rozdział wtóry, w którym rotmistrz radę daie.
+
+Rzekł tedy rotmistrz Zbigniew, gładząc wąsa: „— Mości panowie! Chleba ledwie co,
+    á Król nic o nas nie wie.”
+Rzekł zaś po chwili: „— Staniecie w kole i będziecie odliczać. Co trzeci, na kogo
+    wypadnie, nocą przemknie się przez czaty z listem do Króla.”
+Zakrzyknęli wszyscy: „— Niech tak będzie!”
+
+
+Rozdział trzeci, w którym towarzysze odliczaią, á noce mijaią.
+
+Póki szereg nie iest pusty, czyń:
+    Zwiększ dzień.
+    Obwieść.
+    Opowiada kronikarz: „Dnia {dzień} października {policzenie głów z szeregu}.”
+
+    Niechay gąb będzie długość szeregu.
+    Gdy gąb iest więcey niż sucharów:
+        Westchnął rotmistrz: „— Chleba nie stało. Zaciśniemy pasa.”
+    Inaczey:
+        Zmniejsz suchary o gąb.
+        Gdy sucharów iest zero, opowiada kronikarz: „Ziedli ostatnie suchary.”
+        Inaczey opowiada kronikarz: „Ziedli po suchárze, á w worku zostało {suchary}.”
+
+    Powtórz dwa razy:
+        Niechay odliczaiący będzie pierwszym z szeregu.
+        Usuń pierwszy element z szeregu, á potem dodaj odliczaiącego do szeregu.
+
+    Niechay wysłannik będzie pierwszym z szeregu.
+    Usuń pierwszy element z szeregu.
+
+    Gdy szereg iest pusty:
+        Odtąd strażnik iest wysłannikiem.
+        Opowiada kronikarz: „{wysłannik} został sam iak palec.”
+    Inaczey:
+        Dodaj wysłannika do posłańców.
+        Rzekł rotmistrz: „— Na ciebie wypadło, {wysłannik}. Z Bogiem!”
+        Opowiada kronikarz: „I {wysłannik} pomknął w noc.”
+
+
+Rozdział czwarty i ostatni, w którym Król wieść odbiera.
+
+Obwieść.
+Opowiada kronikarz: „Do obozu królewskiego dotarli kolejno {złączenie posłańców przez „, ”}.
+    Baszty do końca strzegł {strażnik}, á gdy przyszła odsiecz,
+    dostał od Króla wieś pod Krakowem.”
+
+Amen.

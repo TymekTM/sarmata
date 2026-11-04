@@ -1,0 +1,13 @@
+Pieśń o naywiętſzym wſpólnym dzielniku, wedle mądrości Euklidesá.
+
+Uczynek naywiętſzy wſpólny dzielnik, przyimuiący pierwſzą liczbę i drugą liczbę:
+    Póki druga liczba nie iest równa zeru, czyń:
+        Niechay reszta będzie pierwſzą liczbą modulo druga liczba.
+        Odtąd pierwſza liczba iest drugą liczbą, á druga liczba iest resztą.
+    Oddaj pierwſzą liczbę.
+
+Niechay będzie rok równy tyſiąc pięćset siedemdziesiąt dwa.
+Obwieść „Naywiętſzy wſpólny dzielnik roku {rok} i trzystu sześćdziesięciu wynosi”,
+    naywiętſzy wſpólny dzielnik z roku i trzystu sześćdziesięciu.
+
+Amen.

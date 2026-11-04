@@ -1,0 +1,39 @@
+Tytuł: Dziennik ocen, czyli regestr żaków Akademii Krakowskiey.
+Przedmowa. Proiekt semestralny z przedmiotu „Podstawy programowania”,
+spisany ku chwale Rzeczypospolitey y na pożytek Iegomości Profesora.
+
+Powołując się na „żacy.sar”.
+
+
+Rozdział czwarty, w którym program z Waszmością rozmawia.
+
+Niechay żaki będą wczytaniem żaków z „oceny.txt”.
+Obwieść „Wczytano {długość żaków} żaków z kroniki.”
+
+Zawsze czyń:
+    Obwieść.
+    Obwieść „Co czynić, Waszmość?”.
+    Obwieść „  1 — okazać ranking żaków”.
+    Obwieść „  2 — przyiąć nowego żaka”.
+    Obwieść „  3 — spisać raport do pliku”.
+    Obwieść „  0 — zakończyć”.
+    Zapytaj „Wybór: ” o wybór.
+
+    Ieśli wybór iest nicością albo wybór iest równy zeru, przerwij.
+
+    Ieśli wybór iest ieden:
+        Uczyń okazanie rankingu z żaków.
+    A ieśli wybór iest dwa:
+        Zapytaj „Miano, nazwisko y stopnie: ” o wpis.
+        Dodaj utworzenie żaka z wpisu do żaków.
+        Obwieść „Przyięto, á iest ich teraz {długość żaków}.”
+    A ieśli wybór iest trzy:
+        Niechay raport będzie regestrem pustym.
+        Dla każdego żaka z żaków, dodaj „{nazwisko żaka} {miano żaka}: {średnia żaka}” do raportu.
+        Zapisz raport do pliku „raport.txt”.
+        Obwieść „Raport spisany. Niechay go Iegomość Profesor czyta w zdrowiu.”
+    Inaczey obwieść „Nie rozumiem, Waszmość. Wybierz ieszcze raz.”
+
+Obwieść „Bywayże zdrów!”.
+
+Amen.

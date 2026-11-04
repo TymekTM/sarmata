@@ -1,0 +1,9 @@
+Przypis: program pyta o słowo á rozsądza, azali czytane wspak iest tym samym.
+
+Zapytaj „Podaj słowo, Waszmość: ” o słowo.
+Niechay słowo będzie małymi literami słowa.
+
+Ieśli słowo czytane wspak iest słowem, obwieść „Zaiste, palindrom!”.
+Inaczey obwieść „Nie iest to palindrom, czytane wspak daie: {słowo wspak}.”
+
+Amen.

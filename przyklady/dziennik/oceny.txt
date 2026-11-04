@@ -1,0 +1,4 @@
+Jan Kochanowski 5 5 4 5
+Mikołaj Rej 3 4 3
+Mikołaj Kopernik 5 5 5 5
+Andrzej Frycz-Modrzewski 4 4 5

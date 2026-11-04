@@ -1,0 +1,9 @@
+Rozdział pierwszy, w którym liczymy do stu á wołamy, gdy przyſtoi.
+
+Dla każdey liczby od iednego do stu:
+    Ieſli liczba iest podzielna przez piętnaście, obwieść „FizzBuzz”,
+    á ieſli podzielna przez trzy, obwieść „Fizz”,
+    á ieſli podzielna przez pięć, obwieść „Buzz”,
+    inaczey obwieść liczbę.
+
+Amen.

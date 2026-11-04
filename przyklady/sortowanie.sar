@@ -1,0 +1,17 @@
+Księga o porządkowaniu liczb metodą bąbelkową, iako na studyach każą.
+
+Niechay liczby będą regestrem z pięciu, trzech, ośmiu, iednego i dziewięciu.
+Niechay ilość będzie długością liczb.
+
+Dla każdego przebiegu od iednego do ilości:
+    Dla każdego miejsca od iednego do ilości bez przebiegu:
+        Niechay lewy będzie elementem miejsce liczb.
+        Niechay prawy będzie elementem miejsce plus ieden liczb.
+        Ieśli lewy iest większy niż prawy:
+            Odtąd element miejsce liczb iest prawym.
+            Odtąd element miejsce plus ieden liczb iest lewym.
+
+Obwieść „Uporządkowane:”, liczby.
+Obwieść „Naywiększa:”, naywiększy z liczb, „a naymnieysza:”, naymnieyszy z liczb.
+
+Amen.

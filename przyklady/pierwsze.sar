@@ -1,0 +1,18 @@
+Rozdział o liczbach pierwszych, które ieno przez się á przez iedność się dzielą.
+
+Uczynek pierwszość, przyimuiący kandydata:
+    Ieśli kandydat iest mnieyszy niż dwa, oddaj fałsz.
+    Niechay dzielnik będzie dwa.
+    Póki dzielnik razy dzielnik nie przewyższa kandydata:
+        Ieśli kandydat iest podzielny przez dzielnik, oddaj fałsz.
+        Zwiększ dzielnik.
+    Oddaj prawdę.
+
+Niechay znalezione będą regestrem pustym.
+Dla każdey liczby od dwóch do stu:
+    Ieśli pierwszość z liczby, dodaj liczbę do znalezionych.
+
+Obwieść „Liczb pierwszych do stu iest {długość znalezionych}:”.
+Obwieść złączenie znalezionych przez „, ”.
+
+Amen.

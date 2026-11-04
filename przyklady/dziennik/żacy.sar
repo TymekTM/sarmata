@@ -1,0 +1,41 @@
+Tytuł: Księga żaków, w którey spisano, czym iest żak i iak się z nim obchodzić.
+Przedmowa. Powołuie ią dziennik.sar; sama rozkazów nie wydaie.
+
+Ród Żak ma miano, nazwisko, stopnie i średnią.
+
+
+Rozdział pierwszy, o rachowaniu.
+
+Uczynek wyliczenie średniey, przyimuiący noty:
+    Ieśli noty są puste, oddaj zero.
+    Niechay suma będzie zerem.
+    Dla każdey noty z not, dodaj notę do sumy.
+    Oddaj sumę podzieloną przez długość not.
+
+
+Rozdział wtóry, o przyimowaniu żaków.
+
+Uczynek utworzenie żaka z wiersza:
+    Niechay słowa będą rozbiorem wiersza.
+    Niechay noty będą regestrem pustym.
+    Dla każdego numeru od trzech do długości słów, dodaj element numer ze słów do not.
+    Oddaj nowego Żaka o mianie pierwszym ze słów, nazwisku drugim ze słów,
+        stopniach równych notom i średniey równey wyliczeniu średniey z not.
+
+Uczynek wczytanie żaków z kroniki:
+    Niechay żaki będą regestrem pustym.
+    Dla każdego wiersza z wierszy pliku kroniki, dodaj utworzenie żaka z wiersza do żaków.
+    Oddaj żaki.
+
+
+Rozdział trzeci, o okazywaniu.
+
+Uczynek okazanie rankingu, przyimuiący spis:
+    Posortuj spis według średniey malejąco.
+    Niechay mieysce będzie ieden.
+    Dla każdego żaka ze spisu:
+        Obwieść „{mieysce}. {miano żaka} {nazwisko żaka} — średnia {średnia żaka}”.
+        Zwiększ mieysce.
+
+
+Amen.
