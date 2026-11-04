@@ -1,4 +1,62 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#7c3aed"/>
-  <text x="32" y="32" dy="0.35em" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, sans-serif" font-size="26" font-weight="600" fill="#ffffff">PL</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="18 -4 164 246">
+  <title>Sarmata</title>
+  <defs>
+    <linearGradient id="tarcza" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#b42727"/>
+      <stop offset="1" stop-color="#5e0f0f"/>
+    </linearGradient>
+    <linearGradient id="zloto" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f3d77a"/>
+      <stop offset="0.55" stop-color="#d4a52a"/>
+      <stop offset="1" stop-color="#a87b16"/>
+    </linearGradient>
+    <linearGradient id="stal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#b8c0cc"/>
+    </linearGradient>
+    <linearGradient id="pioro" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#e9dcc0"/>
+    </linearGradient>
+    <radialGradient id="pergamin" cx="0.5" cy="0.45" r="0.75">
+      <stop offset="0.55" stop-color="#f5ecd6"/>
+      <stop offset="1" stop-color="#e4d1a8"/>
+    </radialGradient>
+  </defs>
+  <g>
+    <path d="M26,66 H174 V142 C174,190 140,218 100,236 C60,218 26,190 26,142 Z" fill="url(#zloto)" stroke="#7d5c0f" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M35,75 H165 V142 C165,184 135,208 100,225 C65,208 35,184 35,142 Z" fill="url(#tarcza)" stroke="#7d5c0f" stroke-width="1.5" stroke-linejoin="round"/>
+    
+    <g>
+      <path d="M63,188 Q135.6,149.4 160,70 Q126.5,141.5 56,180 Z" fill="url(#stal)" stroke="#3b2a1a" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M68,182 Q129.5,144.1 145,93.2" stroke="#8d97a6" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <path d="M56.4,185.7 L29.1,198.1 Q20,202.3 27.4,208.8"
+            stroke="#3b2a1a" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M56.4,185.7 L29.1,198.1 Q20,202.3 27.4,208.8"
+            stroke="#5e0f0f" stroke-width="6.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M54.6,172.2 L65.4,195.8"
+            stroke="#3b2a1a" stroke-width="7.5" stroke-linecap="round"/>
+      <path d="M54.6,172.2 L65.4,195.8"
+            stroke="#d4a52a" stroke-width="4.2" stroke-linecap="round"/>
+      <circle cx="40.9" cy="192.7" r="2.2" fill="#d4a52a"/>
+    </g>
+    
+    <g>
+      <path d="M140.9,187 C137.8,185.6 132.3,181.9 124.9,176.6 C117.5,171.3 105.4,163.3 96.2,155.1 C87.1,146.9 77.5,136.8 70.2,127.4 C62.9,118 56.7,106.7 52.5,98.6 C48.3,90.6 46.8,84.2 45.1,79 C43.3,73.9 41,68.5 42,67.7 C43.1,66.8 46.6,70.5 51.2,73.9 C55.8,77.3 62.2,81.2 69.7,88 C77.3,94.9 88.2,105.5 96.5,115.1 C104.8,124.7 113,135.9 119.5,145.4 C125.9,154.8 131.3,165.2 135.3,171.8 C139.2,178.4 142.2,182.5 143.1,185 C144.1,187.6 143.9,188.4 140.9,187 Z" fill="url(#pioro)" stroke="#3b2a1a" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M122.9,163.4 L108.7,161.5 M113.6,152.4 L97.7,151.8 M104.3,141.3 L87.6,141.5 M95,130.3 L78.3,130.5 M85.7,119.3 L69.9,118.7 M76.3,108.3 L62.2,106.3 M67,97.3 L55.2,93.3 M57.7,86.2 L48.7,80" stroke="#b9a37c" stroke-width="1" fill="none"/>
+      <path d="M142,186 L46.9,73.5" stroke="#3b2a1a" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M142,186 L147.4,197.3 L158.7,205.7 L152.3,193.2 Z" fill="#3b2a1a"/>
+    </g>
+    
+    <g stroke="#7d5c0f" stroke-width="2" stroke-linejoin="round">
+      <path d="M44,52 L38,14 L70,34 L100,6 L130,34 L162,14 L156,52 Z" fill="url(#zloto)"/>
+      <rect x="42" y="46" width="116" height="12" rx="3" fill="url(#zloto)"/>
+      <circle cx="38" cy="13" r="5" fill="url(#zloto)"/>
+      <circle cx="100" cy="5" r="5.5" fill="url(#zloto)"/>
+      <circle cx="162" cy="13" r="5" fill="url(#zloto)"/>
+      <circle cx="70" cy="52" r="3" fill="#8f1d1d" stroke="none"/>
+      <circle cx="100" cy="52" r="3.4" fill="#1f4f8f" stroke="none"/>
+      <circle cx="130" cy="52" r="3" fill="#8f1d1d" stroke="none"/>
+    </g>
+  </g>
 </svg>
