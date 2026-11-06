@@ -1,0 +1,38 @@
+Tytuł: Kronika skarbu karczemnego, gdzie długi pod pieczęcią chowano.
+
+Anno Domini MDCXXVI, w Krakowie, ułożono księgę trwałą przeciw zapomnieniu i szalbierstwu.
+
+Powołując się na „../księgi/skarb”.
+
+
+Rozdział pierwszy, w którym karczmarz skarb zakłada i pierwszych gości wpisuie.
+
+Niechay kronika będzie otwarciem skarbu „karczma”.
+Uczyń wniesienie wpisu dla kroniki i spisu, gdzie „miano” ma „pan Zagłoba”, a „dług” ma dwanaście.
+Uczyń wniesienie wpisu dla kroniki i spisu, gdzie „miano” ma „Rzędzian”, a „dług” ma zero.
+Uczyń wniesienie wpisu dla kroniki i spisu, gdzie „miano” ma „Kmicic”, a „dług” ma pięć.
+Uczyń zapieczętowanie skarbu dla kroniki.
+Opowiada kronikarz: „Zapieczętowano księgę i złożono w sklepieniu.”
+
+
+Rozdział wtóry, w którym skarb na nowo otwieraią i winowayców szukają.
+
+Niechay szkatuła będzie otwarciem skarbu „karczma”.
+Niechay winowajcy będą wszystkie wpisy ze zbioru szkatuły, gdzie wpis pod „dług” iest większy niż zero.
+Opowiada kronikarz: „Po ponownym otwarciu skarbu winni grosza są: {złączenie człek pod „miano” dla każdego człeka z winowajców przez „, ”}.”
+
+
+Rozdział trzeci, w którym umowę zrywają i pergamin drą po klątwie.
+
+Uczyń zawarcie umowy dla szkatuły.
+Spróbuy:
+    Uczyń wniesienie wpisu dla szkatuły i spisu, gdzie „miano” ma „Bohun”, a „dług” ma sto.
+    Rzuć klątwę „Karczmarz wywrócił kałamarz i odmówił wiary.”
+A w razie biedy, zwaney tumultem:
+    Uczyń podarcie pergaminu dla szkatuły.
+    Opowiada kronikarz: „Podarto pergamin umowy wskutek klątwy: {tumult}”.
+Opowiada kronikarz: „W szkatule stoi nadal {długość zbioru szkatuły} wpisów — po Bohunie śladu nie masz.”
+
+Uczyń wymazanie skarbu dla szkatuły.
+
+Amen.

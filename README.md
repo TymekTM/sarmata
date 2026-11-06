@@ -269,6 +269,12 @@ Księga to plik z samymi uczynkami i rodami, zakończony `Amen.` Powołana, dzia
 jakby jej treść spisano w piśmie głównym. Ścieżka liczy się od pliku powołującego,
 `.sar` wolno pominąć, a błędne koło powołań skryba wytknie.
 
+Księgi można rozdawać innym, by powoływali je u siebie. Pierwsza oficjalna księga
+powszechna to `księgi/skarb.sar` — baza danych trwała: wpisy (spisy) chowa w kronice
+na dysku, umowa z odpisem pergaminu daje wycofanie zmian, a zasuwa pilnuje, by dwie
+umowy nie szły naraz. Woła się ją tak: `Powołując się na „../księgi/skarb”.` — patrz
+`przyklady/skarb.sar`.
+
 ## Grzechy (błędy)
 
 Skryba wytyka błędy po staropolsku i wskazuje miejsce:
@@ -296,6 +302,7 @@ Błędy w trakcie działania też mają swoje kazania:
 | `przyklady/sortowanie.sar` | sortowanie bąbelkowe |
 | `przyklady/karczma.sar` | kronika karczmy: spis cen, klątwy za niezapłacone trunki, regestry składane, plik z długami |
 | `przyklady/baszta.sar` | opowieść o oblężonej baszcie; pod spodem problem Józefa Flawiusza i racjonowanie chleba |
+| `przyklady/skarb.sar` | kronika skarbu karczemnego: pierwsza księga powszechna `księgi/skarb.sar` (baza danych) — wpisy pod pieczęcią, umowa z odpisem pergaminu i zasuwa |
 | `przyklady/dziennik/dziennik.sar` | projekt semestralny: dziennik ocen z menu, plikiem, rodem i rankingiem; ród i uczynki w księdze `żacy.sar` |
 
 ## Budowa skryby

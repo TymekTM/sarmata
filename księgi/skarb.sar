@@ -1,0 +1,258 @@
+Tytuł: Księga Skarbu, w którey chowa się wpisy pod pieczęcią, umową i zasuwą.
+Przedmowa. Pierwsza księga powszechna Sarmaty: baza danych w plikach. Sama rozkazów nie wydaie,
+ieno rody i uczynki; kto ią powołuie, ten woła skarb po mianie i trzyma go w iedney rzeczy.
+
+Przedmowa. O trwałości. Skarb mieszka w trzech plikach obok skryby: «miano.kronika» to stan
+spieczętowany, «miano.dziennik» to dziennik umowy, ieno nim się pieczętuie, á «miano.zasuwa»
+to zasuwa, by dwie umowy nie szły naraz. Kronika to wiersze, iedén wpis na wiersz,
+dziennik pisze się w całości, kończy znacznikiem PIECZĘĆ i dopiero wtedy przenosi atomowo na
+kronikę. Dziennik bez pieczęci to pergamin podarty i przy otwarciu skarbu idzie precz.
+
+Przedmowa. O pułapkach, które księga omiiá. Kopia iest płytka, więc odpis umowy to zapis całego
+zbioru w piśmie, á nie kopia. Zapis czyta się znak po znaku, bo rozbiór i rozcięcie ucinaią białe
+znaki z boków i samowolnie czynią z pism liczby. Księga nie ma zmiennych globalnych: skarb wędruie
+przez rzeczy uczynków. Brak fsync: przeniesienie chroni przed padem skryby, nie przed gaśnięciem
+świec. Zasuwa nie iest atomowa, bo sprawdzenie pliku i iego założenie to dwa ruchy.
+
+
+Rozdział pierwszy, w którym spisuie się ród Skarb.
+
+Ród Skarb ma zbiór, miano kroniki, miano dziennika, miano zasuwy i odpis umowy.
+
+
+Rozdział wtóry, w którym rzecz przechodzi w pismo i z powrotem.
+
+Przedmowa. Zapis iest iednowierszowy, á każda wartość ma znacznik rodzaiu. Znaczą zaś: «N;»
+nicość, «P1;» prawdę, «P0;» fałsz, «C12;» liczbę całkowitą, «U3,14;» ułamek, «S"…"» pismo
+z ucieczką dla ukośnika, cudzysłowu i nowego wiersza, «R[…]» regestr, «M{…}» spis. W spisie
+po kluczu idzie wartość; klucz ma własny znacznik, więc iedén, «1» i prawda to trzy rożne klucze.
+
+Uczynek spisanie rzeczy, przyimuiące rzecz:
+    Ieśli rzecz iest nicością, oddaj „N;”.
+    Ieśli rzecz iest prawdą albo fałszem:
+        Ieśli rzecz, oddaj „P1;”.
+        Oddaj „P0;”.
+    Ieśli rzecz iest liczbą całkowitą, oddaj „C{rzecz};”.
+    Ieśli rzecz iest ułamkiem:
+        Niechay tekst będzie „{rzecz}”.
+        Spróbuy:
+            Niechay sprawdzian będzie wartością liczbową z tekstu.
+        A w razie biedy:
+            Rzuć klątwę „Skarb nie przyimie ułamka niewiadomego ani nieskończonego: {tekst}.”
+        Oddaj „U{tekst};”.
+    Ieśli rzecz iest pismem:
+        Ieśli rzecz nie zawiera „\\” i rzecz nie zawiera „\"” i rzecz nie zawiera „\n”, oddaj „S\"{rzecz}\"”.
+        Niechay kawałki będą regestrem z „S\"”.
+        Dla każdey litery z rzeczy:
+            Ieśli litera iest „\\”, dodaj „\\\\” do kawałków.
+            A ieśli litera iest „\"”, dodaj „\\\"” do kawałków.
+            A ieśli litera iest „\n”, dodaj „\\n” do kawałków.
+            Inaczey dodaj literę do kawałków.
+        Dodaj „\"” do kawałków.
+        Oddaj złączenie kawałków przez puste pismo.
+    Ieśli rzecz iest regestrem:
+        Niechay kawałki będą regestrem z „R[”.
+        Dla każdego składnika z rzeczy, dodaj spisanie rzeczy ze składnika do kawałków.
+        Dodaj „]” do kawałków.
+        Oddaj złączenie kawałków przez puste pismo.
+    Ieśli rzecz iest spisem:
+        Niechay kawałki będą regestrem z „M\{”.
+        Dla każdego hasła z rzeczy:
+            Dodaj spisanie rzeczy z hasła do kawałków.
+            Dodaj spisanie rzeczy z rzeczy pod hasłem do kawałków.
+        Dodaj „}” do kawałków.
+        Oddaj złączenie kawałków przez puste pismo.
+    Rzuć klątwę „Skarb nie spisze rzeczy tego rodzaiu: {rodzaj z rzeczy}.”
+
+Przedmowa. Czytanie idzie znak po znaku, bez rekurencji: stos ram (iedna rama na otwarty regestr
+albo spis), tryb czytania i wartość gotowa, którą po każdym znaku kładzie się na wierzch stosu;
+zapis zepsuty, ucięty albo z białymi znakami po bokach to klątwa, nie zgadywanka.
+
+Uczynek odczytanie rzeczy, przyimuiące pismo:
+    Niechay stos będzie regestrem pustym.
+    Niechay tryb będzie „wartość”.
+    Niechay znacznik będzie „”.
+    Niechay kawałki będą regestrem pustym.
+    Niechay kształt będzie „”.
+    Niechay wynik będzie nicością.
+    Niechay koniec będzie fałszem.
+    Dla każdey litery z pisma:
+        Ieśli koniec, rzuć klątwę „Zapis zepsuty: po wartości ostały się śmieci ({litera}).”
+        Niechay gotowa będzie nicością.
+        Niechay dokonane będzie fałszem.
+        Ieśli tryb iest „wartość”:
+            Ieśli litera iest „N” albo litera iest „P” albo litera iest „C” albo litera iest „U”:
+                Odtąd znacznik iest literą.
+                Odtąd kawałki iest regestrem pustym.
+                Odtąd tryb iest „liczba”.
+            A ieśli litera iest „S”:
+                Odtąd tryb iest „otwarcie pisma”.
+            A ieśli litera iest „R” albo litera iest „M”:
+                Odtąd kształt iest literą.
+                Odtąd tryb iest „otwarcie”.
+            A ieśli litera iest „]” albo litera iest „}”:
+                Ieśli długość stosu iest zero, rzuć klątwę „Zapis zepsuty: zamknięcie {litera} bez otwarcia.”
+                Niechay rama będzie ostatnim elementem stosu.
+                Ieśli litera nie iest rama pod „zamknięcie”, rzuć klątwę „Zapis zepsuty: zamknięcie {litera} nie pasuie do otwarcia.”
+                Ieśli rama pod „czeka”, rzuć klątwę „Zapis zepsuty: spis kończy się kluczem bez wartości.”
+                Odtąd gotowa iest rama pod „skład”.
+                Usuń ostatni element z stosu.
+                Odtąd dokonane iest prawdą.
+            Inaczey rzuć klątwę „Zapis zepsuty: nieoczekiwany znak {litera}.”
+        A ieśli tryb iest „liczba”:
+            Ieśli litera nie iest „;”, dodaj literę do kawałków.
+            A ieśli litera iest „;”:
+                Niechay treść będzie złączeniem kawałków przez puste pismo.
+                Ieśli znacznik iest „N”:
+                    Ieśli treść nie iest pusta, rzuć klątwę „Zapis zepsuty: nicość z treścią.”
+                    Odtąd gotowa iest nicością.
+                A ieśli znacznik iest „P”:
+                    Ieśli treść iest „1”, odtąd gotowa iest prawdą.
+                    A ieśli treść iest „0”, odtąd gotowa iest fałszem.
+                    Inaczey rzuć klątwę „Zapis zepsuty: prawda ani fałsz, ieno {treść}.”
+                Inaczey:
+                    Odtąd gotowa iest wartością liczbową z treści.
+                    Ieśli znacznik iest „C” i gotowa nie iest liczbą całkowitą, rzuć klątwę „Zapis zepsuty: {treść} to nie liczba całkowita.”
+                Odtąd dokonane iest prawdą.
+                Odtąd tryb iest „wartość”.
+        A ieśli tryb iest „otwarcie pisma”:
+            Ieśli litera nie iest „\"”, rzuć klątwę „Zapis zepsuty: pismo bez cudzysłowu ({litera}).”
+            Odtąd kawałki iest regestrem pustym.
+            Odtąd tryb iest „pismo”.
+        A ieśli tryb iest „pismo”:
+            Ieśli litera iest „\\”:
+                Odtąd tryb iest „ucieczka”.
+            A ieśli litera iest „\"”:
+                Odtąd gotowa iest złączeniem kawałków przez puste pismo.
+                Odtąd dokonane iest prawdą.
+                Odtąd tryb iest „wartość”.
+            Inaczey dodaj literę do kawałków.
+        A ieśli tryb iest „ucieczka”:
+            Ieśli litera iest „n”, dodaj „\n” do kawałków.
+            A ieśli litera iest „\\”, dodaj „\\” do kawałków.
+            A ieśli litera iest „\"”, dodaj „\"” do kawałków.
+            Inaczey rzuć klątwę „Zapis zepsuty: nieznana ucieczka {litera}.”
+            Odtąd tryb iest „pismo”.
+        A ieśli tryb iest „otwarcie”:
+            Ieśli kształt iest „R”:
+                Ieśli litera nie iest „[”, rzuć klątwę „Zapis zepsuty: po «R» brak nawiasu «[».”
+                Niechay rama będzie spisem, gdzie „kształt” ma „R”, „zamknięcie” ma „]” i „skład” ma regestr pusty.
+            Inaczey:
+                Ieśli litera nie iest „\{”, rzuć klątwę „Zapis zepsuty: po «M» brak nawiasu «\{».”
+                Niechay rama będzie spisem, gdzie „kształt” ma „M”, „zamknięcie” ma „}”, „czeka” ma fałsz i „skład” ma spis pusty.
+            Dodaj ramę do stosu.
+            Odtąd tryb iest „wartość”.
+        Ieśli dokonane:
+            Ieśli długość stosu iest zero:
+                Odtąd wynik iest gotowa.
+                Odtąd koniec iest prawdą.
+            Inaczey:
+                Niechay rama będzie ostatnim elementem stosu.
+                Niechay skład będzie rama pod „skład”.
+                Ieśli rama pod „kształt” iest „R”:
+                    Dodaj gotowa do składu.
+                A ieśli rama pod „czeka”:
+                    Niechay hasło będzie rama pod „hasło”.
+                    Odtąd skład pod hasłem iest gotowa.
+                    Odtąd rama pod „czeka” iest fałszem.
+                Inaczey:
+                    Ieśli gotowa nie iest liczbą całkowitą i gotowa nie iest pismem i gotowa nie iest prawdą albo fałszem, rzuć klątwę „Zapis zepsuty: kluczem spisu bywa liczba, pismo albo prawda, nie {rodzaj z gotowa}.”
+                    Odtąd rama pod „hasło” iest gotowa.
+                    Odtąd rama pod „czeka” iest prawdą.
+    Ieśli nie koniec, rzuć klątwę „Zapis ucięty: wartość się nie domknęła.”
+    Oddaj wynik.
+
+
+Rozdział trzeci, w którym zasuwa się i odsuwa zasuwę.
+
+Przedmowa. Sprawdzenie pliku i założenie go to dwa ruchy, nie iedén, a spać skryba nie umie,
+więc czekanie iest ograniczone tysiącem prób, po czym klątwa — nie zawsze czyń, bo zawisłby
+program, gdy zasuwa została po padzie cudzego skryby (wtedy trzeba ią ręką usunąć).
+
+Uczynek zasunięcie zasuwy, przyimuiące skarb:
+    Powtórz tysiąc razy:
+        Ieśli plik miano zasuwy skarbu nie istnieie:
+            Zapisz „zasunięta” do pliku miano zasuwy skarbu.
+            Oddaj.
+    Rzuć klątwę „Zasuwa {miano zasuwy skarbu} zasunięta cudzą ręką, á iey ni ruszyć.”
+
+Uczynek odsunięcie zasuwy, przyimuiące skarb:
+    Ieśli plik miano zasuwy skarbu istnieie, usuń plik miano zasuwy skarbu.
+
+
+Rozdział czwarty, w którym skarb się otwiera i zapieczętowuie.
+
+Uczynek otwarcie skarbu, przyimuiące miano:
+    Niechay skarb będzie nowym Skarbem.
+    Odtąd zbiór skarbu iest regestrem pustym.
+    Odtąd miano kroniki skarbu iest „{miano}.kronika”.
+    Odtąd miano dziennika skarbu iest „{miano}.dziennik”.
+    Odtąd miano zasuwy skarbu iest „{miano}.zasuwa”.
+    Ieśli plik miano dziennika skarbu istnieie:
+        Niechay wiersze będą wiersze pliku miano dziennika skarbu.
+        Niechay spieczętowany będzie fałszem.
+        Ieśli długość wierszy iest większa niż zero:
+            Ieśli ostatni element wierszy iest „PIECZĘĆ”, odtąd spieczętowany iest prawdą.
+        Ieśli spieczętowany, przenieś plik miano dziennika skarbu do miano kroniki skarbu.
+        Inaczey usuń plik miano dziennika skarbu.
+    Ieśli plik miano kroniki skarbu istnieie:
+        Dla każdego wiersza z wierszy pliku miano kroniki skarbu:
+            Ieśli wiersz nie iest pusty i wiersz nie iest „PIECZĘĆ”:
+                Niechay wpis będzie odczytaniem rzeczy z wiersza.
+                Ieśli wpis nie iest spisem, rzuć klątwę „Kronika zepsuta: wiersz nie iest wpisem.”
+                Dodaj wpis do zbioru skarbu.
+    Oddaj skarb.
+
+Uczynek wniesienie wpisu, przyimuiące skarb i wpis:
+    Ieśli wpis nie iest spisem, rzuć klątwę „Do skarbu wnosi się ieno spis, nie {rodzaj z wpisu}.”
+    Niechay pismo będzie spisaniem rzeczy z wpisu.
+    Dodaj odczytanie rzeczy z pisma do zbioru skarbu.
+
+Uczynek zapieczętowanie skarbu, przyimuiące skarb:
+    Ieśli odpis umowy skarbu nie iest nicością, rzuć klątwę „Umowa otwarta: pieczętui umowę, nie skarb.”
+    Uczyń zawarcie umowy dla skarbu.
+    Spróbuy:
+        Uczyń zapieczętowanie umowy dla skarbu.
+    A w razie biedy, zwaney nieszczęściem:
+        Uczyń podarcie pergaminu dla skarbu.
+        Rzuć klątwę nieszczęście.
+
+
+Rozdział piąty, w którym zawiera się umowę, pieczętuie ią albo drze pergamin.
+
+Uczynek zawarcie umowy, przyimuiące skarb:
+    Ieśli odpis umowy skarbu nie iest nicością, rzuć klątwę „Umowa iuż zawarta: pieczętui ią albo podrzyi pergamin.”
+    Uczyń zasunięcie zasuwy dla skarbu.
+    Spróbuy:
+        Odtąd odpis umowy skarbu iest spisaniem rzeczy ze zbioru skarbu.
+    A w razie biedy, zwaney nieszczęściem:
+        Uczyń odsunięcie zasuwy dla skarbu.
+        Rzuć klątwę nieszczęście.
+
+Uczynek zapieczętowanie umowy, przyimuiące skarb:
+    Ieśli odpis umowy skarbu iest nicością, rzuć klątwę „Umowy nie zawarto, więc nie ma czego pieczętować.”
+    Niechay wiersze będą regestrem pustym.
+    Dla każdego wpisu ze zbioru skarbu, dodaj spisanie rzeczy z wpisu do wierszy.
+    Zapisz wiersze do pliku miano dziennika skarbu.
+    Dopisz „PIECZĘĆ” do pliku miano dziennika skarbu.
+    Przenieś plik miano dziennika skarbu do miano kroniki skarbu.
+    Odtąd odpis umowy skarbu iest nicością.
+    Uczyń odsunięcie zasuwy dla skarbu.
+
+Uczynek podarcie pergaminu, przyimuiące skarb:
+    Ieśli odpis umowy skarbu iest nicością, oddaj.
+    Odtąd zbiór skarbu iest odczytaniem rzeczy z odpisu umowy skarbu.
+    Odtąd odpis umowy skarbu iest nicością.
+    Uczyń odsunięcie zasuwy dla skarbu.
+
+
+Rozdział szósty, w którym skarb się wymazuie.
+
+Uczynek wymazanie skarbu, przyimuiące skarb:
+    Ieśli plik miano kroniki skarbu istnieie, usuń plik miano kroniki skarbu.
+    Ieśli plik miano dziennika skarbu istnieie, usuń plik miano dziennika skarbu.
+    Ieśli plik miano zasuwy skarbu istnieie, usuń plik miano zasuwy skarbu.
+    Odtąd zbiór skarbu iest regestrem pustym.
+    Odtąd odpis umowy skarbu iest nicością.
+
+Amen.
