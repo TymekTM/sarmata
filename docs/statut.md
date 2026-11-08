@@ -234,6 +234,8 @@ Gdy dwie rzeczy remisują, skryba zgłasza dwuznaczność i prosi o miana o ró�
 Wypisywane są z przecinkiem: `4,75`, do 10 cyfr znaczących. Liczba całkowita dzielona
 przez całkowitą daje całkowitą, jeśli dzieli się bez reszty (`osiem podzielone przez dwa` → `4`),
 a w przeciwnym razie ułamek (`siedem podzielone przez dwa` → `3,5`).
+Liczba całkowita ma 64 bity. Rachunek, który by się w nich nie zmieścił (`2 do potęgi 70`),
+daje ułamek, a nie liczbę przekręconą na ujemną.
 
 ### Pisma (napisy)
 
@@ -703,7 +705,7 @@ sarmata gramatyka               # gramatyka TextMate (kolorowanie składni)
 
 **Rozmowa.** Każde zdanie dopisuje się do pisma, które kompiluje się od nowa, a na ekran
 idzie tylko to, co przybyło. Blok po dwukropku kończy pusty wiersz. Zdanie, które zgrzeszy,
-przepada, a pismo zostaje, jakie było. `Amen.` albo koniec wejścia kończy rozmowę. Skoro
+przepada, a pismo zostaje, jakie było. `Amen.`, `Zakończ.` albo koniec wejścia kończy rozmowę. Skoro
 całość biegnie od nowa, `losowa liczba` za każdym razem wyjdzie inna, a `Zapytaj` dostaje
 koniec wejścia.
 

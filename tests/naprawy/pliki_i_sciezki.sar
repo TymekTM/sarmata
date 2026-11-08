@@ -1,0 +1,20 @@
+Przedmowa. Ścieżka ze znakiem zerowym nie może wskazać innego pliku, a katalog to nie plik.
+
+Niechay ściezka będzie treść pliku „sciezka_z_zerem.bin”.
+Obwieść długość ściezka.
+Ieśli plik ściezka istnieie, obwieść „istnieie — źle”, inaczey obwieść „nie istnieie”.
+Spróbuy:
+    Obwieść treść pliku ściezka.
+A w razie biedy:
+    Obwieść „zero w ścieżce odrzucone”.
+Spróbuy:
+    Obwieść treść pliku „.”.
+A w razie biedy:
+    Obwieść „katalog to nie plik”.
+Spróbuy:
+    Utwórz katalog „”.
+A w razie biedy:
+    Obwieść „puste miano odrzucone”.
+Obwieść „koniec”.
+
+Amen.

@@ -1,0 +1,17 @@
+Przedmowa. Regestr składany we wstawce regestru składanego, ozdobne słowa po «Zakończ»
+i podmiot pominięty po warunku złożonym.
+
+Niechay x będzie 6.
+Ieśli x iest większe niż ieden, a mnieysze niż dziesięć, obwieść „między”.
+Ieśli x iest większe niż dziesięć, a mnieysze niż sto:
+    Obwieść „duże”.
+A ieśli podzielne przez trzy:
+    Obwieść „podzielne przez trzy”.
+Niechay l będzie „{- x plus ieden dla każdego x od iednego do dwóch}” dla każdey liczby od iednego do dwóch.
+Obwieść l.
+Niechay program będzie 1.
+Obwieść „koniec”.
+Zakończ program.
+Obwieść „po końcu — źle”.
+
+Amen.

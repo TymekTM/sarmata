@@ -1,0 +1,15 @@
+Przedmowa. Zaokrąglenie ułamka ponad miarę liczby całey nie daie liczby uiemney; „zero tysięcy” to zero.
+
+Niechay x będzie 1,0 razy 10 razy 10 razy 10 razy 10 razy 10 razy 10 razy 10 razy 10 razy 10 razy 10 razy 10 razy 10 razy 10 razy 10 razy 10 razy 10 razy 10 razy 10 razy 10 razy 10.
+Obwieść zaokrąglenie x, część całkowita x, zaokrąglenie (minus x).
+Obwieść zaokrąglenie 2,5, część całkowita (minus 2,5).
+Obwieść zero tysięcy, tysiąc, dwa tysiące.
+
+Przypis: słowa z rozbioru stawaią się liczbami tylko, gdy są liczbami dziesiętnemi.
+Dla każdego słowa z rozbioru z „99999999999999999999 0x10 12”:
+    Obwieść słowo, rodzaj słowa.
+
+Przypis: puste pismo powielone choćby i bez miary zostaie puste, a nie kręci się wieki.
+Obwieść długość („” razy 9223372036854775807).
+
+Amen.

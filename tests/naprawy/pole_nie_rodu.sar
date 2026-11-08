@@ -1,0 +1,22 @@
+Przedmowa. Pole rzeczy, co rodem nie iest: grzech, który próba łapie, a nie śmierć programu.
+
+Ród Człowiek ma miano.
+
+Niechay jan będzie nowym Człowiekiem o mianie „Jan”.
+Niechay l będą regestrem z jana i 5.
+Spróbuy:
+    Posortuy l według miana.
+A w razie biedy, zwaney b:
+    Obwieść „Złapano:”, b.
+Niechay liczba będzie 5.
+Spróbuy:
+    Obwieść miano liczby.
+A w razie biedy, zwaney b:
+    Obwieść „Złapano:”, b.
+Spróbuy:
+    Odtąd miano liczby iest „Piotr”.
+A w razie biedy, zwaney b:
+    Obwieść „Złapano:”, b.
+Obwieść „dalej”.
+
+Amen.

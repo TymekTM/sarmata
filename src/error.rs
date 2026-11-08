@@ -51,9 +51,11 @@ pub fn render(err: &CompileError, pisma: &[Pismo]) -> String {
     if let Some(text) = src.lines().nth(line.saturating_sub(1)) {
         let num = line.to_string();
         let pad = " ".repeat(num.len());
+        // Znak łączący (NFD) nie zajmuje miejsca na ekranie, więc i odstępu pod sobą nie ma.
         let caret_pad: String = text
             .chars()
             .take(err.col.saturating_sub(1))
+            .filter(|&c| !crate::text::is_mark(c))
             .map(|c| if c == '\t' { '\t' } else { ' ' })
             .collect();
         out.push_str(&format!("{dim} {num} │{reset} {text}\n"));

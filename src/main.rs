@@ -80,21 +80,73 @@ fn run(args: &[String]) -> Result<ExitCode, String> {
                 .status()
                 .map_err(|e| format!("Nie vdáło ſię vruchomić prográmu: {e}"))?;
             let _ = std::fs::remove_file(&exe);
-            Ok(ExitCode::from(status.code().unwrap_or(1) as u8))
+            Ok(ExitCode::from(exit_code(status)))
         }
-        Some(src) => {
-            let out = match args.iter().position(|a| a == "-o") {
+        Some(_) => {
+            // «-o wyjście» może stać przed pismem albo po nim.
+            let o = args.iter().position(|a| a == "-o");
+            let src = args
+                .iter()
+                .enumerate()
+                .find(|&(i, _)| o.is_none_or(|o| i != o && i != o + 1))
+                .map(|(_, a)| a.as_str())
+                .ok_or("Którego piſmá? Podaj ścieżkę.")?;
+            let out = match o {
                 Some(i) => PathBuf::from(
                     args.get(i + 1)
                         .ok_or("Po «-o» podaj miano pliku wyiśćiowego.")?,
                 ),
                 None => PathBuf::from(Path::new(src).file_stem().ok_or("Dźiwne miano piſmá.")?),
             };
+            if same_file(&out, Path::new(src)) {
+                return Err(format!(
+                    "Prográm nádpiſáłby piſmo „{}”. Podaj inne miano przez «-o».",
+                    out.display()
+                ));
+            }
             cc(&translate_file(Path::new(src), false)?, &out, "-O2")?;
             eprintln!("Skrybá ſkończył. Prográm ſpiſány do „{}”.", out.display());
             Ok(ExitCode::SUCCESS)
         }
     }
+}
+
+/// Czy `a` i `b` to jeden plik (`b` istnieje; `a` może jeszcze nie istnieć).
+fn same_file(a: &Path, b: &Path) -> bool {
+    match (a.canonicalize(), b.canonicalize()) {
+        (Ok(x), Ok(y)) => x == y,
+        _ => false,
+    }
+}
+
+/// Kod wyjścia programu. Program zabity sygnałem (SIGSEGV, SIGFPE…) wychodzi bez słowa,
+/// więc obwieszczamy, co go zabiło, i zwracamy 128 + numer sygnału, jak czyni powłoka.
+fn exit_code(status: std::process::ExitStatus) -> u8 {
+    if let Some(code) = status.code() {
+        return code as u8;
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::ExitStatusExt;
+        if let Some(sig) = status.signal() {
+            eprintln!("{}", signal_msg(sig));
+            return (128 + sig) as u8;
+        }
+    }
+    1
+}
+
+fn signal_msg(sig: i32) -> String {
+    let why = match sig {
+        11 => {
+            "przepełnił ſię ſtos álbo ſięgnięto w pámięć cudzą (SIGSEGV); może vczynek woła ſám śiebie bez końcá"
+        }
+        8 => "błąd rachunku (SIGFPE)",
+        6 => "przerwány (SIGABRT)",
+        9 => "zábity (SIGKILL)",
+        _ => "zábity ſygnáłem",
+    };
+    format!("Prográm pádł: {why}. Sygnáł {sig}.")
 }
 
 fn translate_file(path: &Path, przeklad: bool) -> Result<String, String> {
@@ -149,6 +201,11 @@ fn cc(c: &str, out: &Path, opt: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// Ostatnie słowa każdego pisma w rozmowie. Gdy ich brak, program skończył się sam
+/// (przez «Zakończ.») — wtedy kończy się i rozmowa, bo każde dalsze zdanie i tak by
+/// przepadło: pismo od nowa puszczane stawałoby zawsze na tym samym «Zakończ.».
+const KONIEC_ROZMOWY: &str = "✠ koniec piſmá w rozmowie ✠\n";
+
 /// Rozmowa ze skrybą: każde zdanie dopisuje się do pisma, całość kompiluje się
 /// od nowa i pokazuje się tylko to, co przybyło. Zdanie, które zgrzeszyło, przepada.
 fn rozmowa() -> Result<ExitCode, String> {
@@ -199,7 +256,10 @@ fn rozmowa() -> Result<ExitCode, String> {
             chunk.clear();
             continue;
         }
-        let pismo = format!("{history}{chunk}\nAmen.\n");
+        let pismo = format!(
+            "{history}{chunk}\nObwieść „{}”.\nAmen.\n",
+            KONIEC_ROZMOWY.trim_end()
+        );
         let built =
             translate(&cwd, "rozmowa".into(), pismo, false).and_then(|c| cc(&c, &exe, "-O0"));
         if let Err(msg) = built {
@@ -214,15 +274,30 @@ fn rozmowa() -> Result<ExitCode, String> {
             .stdin(Stdio::null())
             .output()
             .map_err(|e| format!("Nie vdáło ſię vruchomić prográmu: {e}"))?;
+        let mut nowe = out.stdout.get(shown..).unwrap_or(&[]);
+        let doszedl = nowe.ends_with(KONIEC_ROZMOWY.as_bytes());
+        if doszedl {
+            nowe = &nowe[..nowe.len() - KONIEC_ROZMOWY.len()];
+        }
         let stdout = std::io::stdout();
         let mut so = stdout.lock();
-        let _ = so.write_all(out.stdout.get(shown..).unwrap_or(&[]));
+        let _ = so.write_all(nowe);
         let _ = so.flush();
         if out.status.success() {
+            if !doszedl {
+                break;
+            }
             history.push_str(&chunk);
-            shown = out.stdout.len();
+            shown = out.stdout.len() - KONIEC_ROZMOWY.len();
         } else {
             let _ = std::io::stderr().write_all(&out.stderr);
+            #[cfg(unix)]
+            {
+                use std::os::unix::process::ExitStatusExt;
+                if let Some(sig) = out.status.signal() {
+                    eprintln!("{}", signal_msg(sig));
+                }
+            }
             if tty {
                 eprintln!("(To zdánie przepádá — piſmo zoſtáie, iákie było.)");
             }

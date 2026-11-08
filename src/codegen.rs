@@ -75,6 +75,18 @@ pub fn generate(prog: &Program, pisma: &[String], zrodla: Option<&[String]>) -> 
     out
 }
 
+/// Nagłówek C pętli `od a do b co st` (bez klamry). Krok czyni się tylko, gdy zostało doń
+/// miejsca, by u granicy liczby („do 9223372036854775807”) licznik nie przewinął się na
+/// ujemne i pętla nie kręciła się bez końca.
+fn range_for(k: &str, ok: &str, a: &str, b: &str, st: &str) -> String {
+    let u = "(unsigned long long)";
+    format!(
+        "for (long long {k} = {a}, {ok} = {st} > 0 ? {a} <= {b} : {a} >= {b}; {ok}; \
+         {ok} = {st} > 0 ? {u}{b} - {u}{k} >= {u}{st} : {u}{k} - {u}{b} >= 0ULL - {u}{st}, \
+         {k} = {ok} ? {k} + {st} : {k})"
+    )
+}
+
 fn comment(s: &str) -> String {
     s.replace("*/", "* /")
 }
@@ -395,7 +407,8 @@ impl Gen<'_> {
                 format!(
                     "long long {a} = sw_calk({fe}, {l}), {b} = sw_calk({te}, {l}), {st} = {se}; \
                      if ({st} == 0) sw_grzech({l}, \"Krok równy zeru — regestr nie miałby końcá.\"); \
-                     for (long long {k} = {a}; {st} > 0 ? {k} <= {b} : {k} >= {b}; {k} += {st}) {{ {var} = sw_liczba({k});"
+                     {} {{ {var} = sw_liczba({k});",
+                    range_for(&k, &self.fresh(), &a, &b, &st)
                 )
             }
         };
@@ -625,12 +638,8 @@ impl Gen<'_> {
                         "  if ({st} == 0) sw_grzech({l}, \"Krok pętli równy zeru — chodziłbyś w kółko do sądnego dniá.\");"
                     ),
                 );
-                line(
-                    out,
-                    &format!(
-                        "  for (long long {k} = {a}; {st} > 0 ? {k} <= {b} : {k} >= {b}; {k} += {st}) {{"
-                    ),
-                );
+                let ok = self.fresh();
+                line(out, &format!("  {} {{", range_for(&k, &ok, &a, &b, &st)));
                 line(out, &format!("    {var} = sw_liczba({k});"));
                 self.loop_body(out, body, d + 1);
                 line(out, "} }");

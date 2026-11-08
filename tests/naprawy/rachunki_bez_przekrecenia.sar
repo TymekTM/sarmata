@@ -1,0 +1,28 @@
+Niechay wielka bedzie 9223372036854775807.
+Niechay mała bedzie -9223372036854775807 - 1.
+Obwieść wielka plus 1.
+Obwieść mała minus 1.
+Obwieść wielka razy 2.
+Obwieść 2 do potęgi 63.
+Obwieść 2 do potęgi 62.
+Obwieść 3 do potęgi 40.
+Obwieść -2 do potęgi 63.
+Obwieść minus mała.
+Obwieść wielka plus 0.
+Ieśli 9007199254740993 iest 9007199254740992,0:
+    Obwieść „równe — źle”.
+Inaczey:
+    Obwieść „różne”.
+Ieśli 9007199254740993 > 9007199254740992,0:
+    Obwieść „większe”.
+Ieśli 9007199254740992,0 < 9007199254740993:
+    Obwieść „mniejsze”.
+Ieśli 5 iest 5,0:
+    Obwieść „pięć równe”.
+Obwieść pierwiastek z 10000000000000001.
+Obwieść pierwiastek z 10000000000000000.
+Obwieść pierwiastek z 9223372030926249001.
+Obwieść pierwiastek z wielka.
+Obwieść pierwiastek z 16.
+Obwieść pierwiastek z 15.
+Amen.

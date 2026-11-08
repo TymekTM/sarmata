@@ -40,6 +40,12 @@ impl Zbieracz {
         let id = self.pisma.len();
         self.kanony
             .push(path.canonicalize().unwrap_or_else(|_| path.to_path_buf()));
+        // BOM zdejmuje i lekser, lecz i tu go zdejmujemy: inaczej w obwieszczeniu grzechu
+        // pierwszy wiersz miałby o znak więcej, a daszek stałby o znak za daleko.
+        let src = match src.strip_prefix('\u{feff}') {
+            Some(s) => s.to_string(),
+            None => src,
+        };
         self.pisma.push(Pismo { shown, src });
         self.stos.push(id);
         let toks = lexer::lex(&self.pisma[id].src, id * WIERSZE_PISMA)?;
@@ -65,12 +71,13 @@ impl Zbieracz {
                         Some(Kw::Uczynek | Kw::Rod) => {}
                         Some(Kw::Amen) => {
                             // Reszty (kropki i końca) nie bierzemy: parser zobaczy «Amen.»
-                            // dopiero na końcu pisma głównego.
-                            if toks.get(i + 2).is_some_and(|n| n.k != K::Eof) {
-                                return Err(at(
-                                    &toks[i + 2],
-                                    "Po «Amen.» nic iuż piſáć nie przyſtoi.",
-                                ));
+                            // dopiero na końcu pisma głównego. Kropka bywa, jak u parsera, opcjonalna.
+                            let mut j = i + 1;
+                            if matches!(&toks[j].k, K::P(p) if [".", "!", "?", ";"].contains(p)) {
+                                j += 1;
+                            }
+                            if toks[j].k != K::Eof {
+                                return Err(at(&toks[j], "Po «Amen.» nic iuż piſáć nie przyſtoi."));
                             }
                             self.stos.pop();
                             return Ok(out);
