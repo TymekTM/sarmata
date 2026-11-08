@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <setjmp.h>
 #include <errno.h>
+#include <limits.h>
 #include <dirent.h>
 #include <sys/stat.h>
 
@@ -110,8 +111,10 @@ static W sw_sad(int b) { W w; w.t = T_SAD; w.u.b = b != 0; return w; }
 
 static size_t sw_utf8_zn(const char *s, size_t n) {
     size_t k = 0;
+    /* Tak jak w sw_off: znak to bajt z doczepionymi bajtami kontynuacji, więc i zabłąkany bajt
+     * kontynuacji na samym początku (z pliku w złym kodowaniu) liczy się za znak. */
     for (size_t i = 0; i < n; i++)
-        if (((unsigned char)s[i] & 0xC0) != 0x80) k++;
+        if (i == 0 || ((unsigned char)s[i] & 0xC0) != 0x80) k++;
     return k;
 }
 
@@ -203,8 +206,19 @@ static void sw_fmt_ulamek(Buf *b, double f) {
 
 static int sw_slot(int rod, int pole);
 
+/* Rzeczy właśnie obwieszczane, od wierzchu w głąb: regestr, co mieści sam siebie, kończy się „…”
+ * zamiast rozrastać się w 2^40 słów, gdy siebie samego ma dwakroć. */
+static const void *sw_fmt_droga[48];
+
 static void sw_fmt(Buf *b, W a, int zagniezdzone, int glebia) {
     if (glebia > 40) { buf_str(b, "…"); return; }
+    const void *p = a.t == T_REGESTR ? (const void *)a.u.r : a.t == T_ROD ? (const void *)a.u.o :
+                    a.t == T_SPIS ? (const void *)a.u.p : NULL;
+    if (p) {
+        for (int i = 0; i < glebia; i++)
+            if (sw_fmt_droga[i] == p) { buf_str(b, "…"); return; }
+        sw_fmt_droga[glebia] = p;
+    }
     switch (a.t) {
     case T_NIC: buf_str(b, "nic"); break;
     case T_LICZBA: {
@@ -308,8 +322,11 @@ static long long sw_calk(W a, int L) {
 
 /* ─────────── rachunki ─────────── */
 
+/* Liczba cała, co nie zmieści się w 64 bitach, przechodzi w ułamek (jak przy dzieleniu
+ * LLONG_MIN przez -1), miast się przekręcić — w C takie przekręcenie to i tak rzecz niedozwolona. */
 static W sw_dodac(W a, W b, int L) {
-    if (a.t == T_LICZBA && b.t == T_LICZBA) return sw_liczba(a.u.i + b.u.i);
+    long long r;
+    if (a.t == T_LICZBA && b.t == T_LICZBA && !__builtin_add_overflow(a.u.i, b.u.i, &r)) return sw_liczba(r);
     if (sw_jest_liczba(a) && sw_jest_liczba(b)) return sw_ulamek(sw_d(a) + sw_d(b));
     if (a.t == T_PISMO || b.t == T_PISMO) { W p[2] = {a, b}; return sw_zlacz(2, p); }
     if (a.t == T_REGESTR && b.t == T_REGESTR) {
@@ -323,7 +340,8 @@ static W sw_dodac(W a, W b, int L) {
 }
 
 static W sw_odjac(W a, W b, int L) {
-    if (a.t == T_LICZBA && b.t == T_LICZBA) return sw_liczba(a.u.i - b.u.i);
+    long long r;
+    if (a.t == T_LICZBA && b.t == T_LICZBA && !__builtin_sub_overflow(a.u.i, b.u.i, &r)) return sw_liczba(r);
     if (sw_jest_liczba(a) && sw_jest_liczba(b)) return sw_ulamek(sw_d(a) - sw_d(b));
     sw_grzech(L, "Odeymowáć możná ieno liczby, á tu ſą: %s i %s.", sw_typ(a), sw_typ(b));
     return SW_NIC;
@@ -331,6 +349,7 @@ static W sw_odjac(W a, W b, int L) {
 
 static W sw_powiel(W s, long long n, int L) {
     if (n < 0) sw_grzech(L, "Piſmá vieymną liczbę rázy powielić nie ſpoſób.");
+    if (!s.u.s->len) return s; /* „” razy 10^18 kręciłoby się wieki, by dać „” */
     Buf b = {0};
     for (long long i = 0; i < n; i++) buf_put(&b, s.u.s->d, s.u.s->len);
     W w = sw_pismo_n(b.d ? b.d : "", b.len);
@@ -339,10 +358,11 @@ static W sw_powiel(W s, long long n, int L) {
 }
 
 static W sw_razy(W a, W b, int L) {
-    if (a.t == T_LICZBA && b.t == T_LICZBA) return sw_liczba(a.u.i * b.u.i);
+    long long r;
+    if (a.t == T_LICZBA && b.t == T_LICZBA && !__builtin_mul_overflow(a.u.i, b.u.i, &r)) return sw_liczba(r);
     if (sw_jest_liczba(a) && sw_jest_liczba(b)) return sw_ulamek(sw_d(a) * sw_d(b));
-    if (a.t == T_PISMO && b.t == T_LICZBA) return sw_powiel(a, b.u.i, L);
-    if (a.t == T_LICZBA && b.t == T_PISMO) return sw_powiel(b, a.u.i, L);
+    if (a.t == T_PISMO && sw_jest_liczba(b)) return sw_powiel(a, sw_calk(b, L), L);
+    if (sw_jest_liczba(a) && b.t == T_PISMO) return sw_powiel(b, sw_calk(a, L), L);
     sw_grzech(L, "Mnożyć możná ieno liczby, á tu ſą: %s i %s.", sw_typ(a), sw_typ(b));
     return SW_NIC;
 }
@@ -351,20 +371,28 @@ static W sw_przez(W a, W b, int L) {
     if (!sw_jest_liczba(a) || !sw_jest_liczba(b))
         sw_grzech(L, "Dźielić możná ieno liczby, á tu ſą: %s i %s.", sw_typ(a), sw_typ(b));
     if (sw_d(b) == 0) sw_grzech(L, "Dźielić przez zero ſię ważyſz? Rzecz bezbożna.");
-    if (a.t == T_LICZBA && b.t == T_LICZBA && a.u.i % b.u.i == 0) return sw_liczba(a.u.i / b.u.i);
+    if (a.t == T_LICZBA && b.t == T_LICZBA) {
+        /* LLONG_MIN / -1 nie mieści się w liczbie (a w C pada od SIGFPE). */
+        if (b.u.i == -1) return a.u.i == LLONG_MIN ? sw_ulamek(-(double)a.u.i) : sw_liczba(-a.u.i);
+        if (a.u.i % b.u.i == 0) return sw_liczba(a.u.i / b.u.i);
+    }
     return sw_ulamek(sw_d(a) / sw_d(b));
 }
 
 static W sw_modulo(W a, W b, int L) {
     if (a.t == T_LICZBA && b.t == T_LICZBA) {
         if (b.u.i == 0) sw_grzech(L, "Reſzty z dźielenia przez zero nie dobędźieſz.");
+        if (b.u.i == -1) return sw_liczba(0); /* LLONG_MIN % -1 pada w C od SIGFPE */
         long long r = a.u.i % b.u.i;
         if (r != 0 && ((r < 0) != (b.u.i < 0))) r += b.u.i;
         return sw_liczba(r);
     }
     if (sw_jest_liczba(a) && sw_jest_liczba(b)) {
         if (sw_d(b) == 0) sw_grzech(L, "Reſzty z dźielenia przez zero nie dobędźieſz.");
-        return sw_ulamek(fmod(sw_d(a), sw_d(b)));
+        /* Jak u liczb całych: reszta ma znak dzielnika. */
+        double r = fmod(sw_d(a), sw_d(b));
+        if (r != 0 && ((r < 0) != (sw_d(b) < 0))) r += sw_d(b);
+        return sw_ulamek(r);
     }
     sw_grzech(L, "Reſztę z dźielenia brác możná ieno z liczb, á tu ſą: %s i %s.", sw_typ(a), sw_typ(b));
     return SW_NIC;
@@ -373,12 +401,13 @@ static W sw_modulo(W a, W b, int L) {
 static W sw_potega(W a, W b, int L) {
     if (a.t == T_LICZBA && b.t == T_LICZBA && b.u.i >= 0) {
         long long r = 1, x = a.u.i, e = b.u.i;
-        while (e > 0) {
-            if (e & 1) r *= x;
-            x *= x;
+        int za_wielka = 0;
+        while (e > 0 && !za_wielka) {
+            if (e & 1) za_wielka |= __builtin_mul_overflow(r, x, &r);
             e >>= 1;
+            if (e) za_wielka |= __builtin_mul_overflow(x, x, &x);
         }
-        return sw_liczba(r);
+        if (!za_wielka) return sw_liczba(r);
     }
     if (sw_jest_liczba(a) && sw_jest_liczba(b)) return sw_ulamek(pow(sw_d(a), sw_d(b)));
     sw_grzech(L, "Do potęgi podnośić możná ieno liczby, á tu ſą: %s i %s.", sw_typ(a), sw_typ(b));
@@ -386,7 +415,7 @@ static W sw_potega(W a, W b, int L) {
 }
 
 static W sw_przeciwne(W a, int L) {
-    if (a.t == T_LICZBA) return sw_liczba(-a.u.i);
+    if (a.t == T_LICZBA) return a.u.i == LLONG_MIN ? sw_ulamek(-(double)a.u.i) : sw_liczba(-a.u.i);
     if (a.t == T_ULAMEK) return sw_ulamek(-a.u.f);
     sw_grzech(L, "Przećiwieńſtwá ma ieno liczbá, nie %s.", sw_typ(a));
     return SW_NIC;
@@ -396,9 +425,62 @@ static W sw_przeciwne(W a, int L) {
 
 static long long sw_spis_szukaj(Spis *s, W k);
 
+/* Pary regestrów (albo spisów) właśnie porównywanych. Para, co wraca w głąb samej siebie, uchodzi
+ * za równą — inaczej regestr zawierający sam siebie porównywałby się do przepełnienia stosu. */
+static const void **sw_rowne_pary;
+static size_t sw_rowne_n, sw_rowne_cap;
+
+static int sw_rowne_(W a, W b);
+
+static int sw_rowne_w_toku(const void *x, const void *y) {
+    for (size_t i = 0; i < sw_rowne_n; i += 2)
+        if (sw_rowne_pary[i] == x && sw_rowne_pary[i + 1] == y) return 1;
+    if (sw_rowne_n + 2 > sw_rowne_cap) {
+        sw_rowne_cap = sw_rowne_cap ? sw_rowne_cap * 2 : 64;
+        sw_rowne_pary = realloc(sw_rowne_pary, sw_rowne_cap * sizeof *sw_rowne_pary);
+        if (!sw_rowne_pary) { fputs("Pámięći zábrákło.\n", stderr); exit(1); }
+    }
+    sw_rowne_pary[sw_rowne_n++] = x;
+    sw_rowne_pary[sw_rowne_n++] = y;
+    return 0;
+}
+
+static int sw_rowne_regestry(Regestr *x, Regestr *y) {
+    if (sw_rowne_w_toku(x, y)) return 1;
+    int r = 1;
+    for (size_t i = 0; r && i < x->len; i++) r = sw_rowne_(x->el[i], y->el[i]);
+    sw_rowne_n -= 2;
+    return r;
+}
+
+static int sw_rowne_spisy(Spis *x, Spis *y) {
+    if (sw_rowne_w_toku(x, y)) return 1;
+    int r = 1;
+    for (size_t i = 0; r && i < x->len; i++) {
+        long long j = sw_spis_szukaj(y, x->klucze[i]);
+        r = j >= 0 && sw_rowne_(x->wart[i], y->wart[j]);
+    }
+    sw_rowne_n -= 2;
+    return r;
+}
+
+/* Liczba cała przeciw ułamkowi: -1, 0, 1, a 2 dla niewiadomej. Nie przez (double)i, bo powyżej
+ * 2^53 rzutowanie gubi cyfry i 9007199254740993 wyszłoby równe 9007199254740992,0. */
+static int sw_cmp_i_f(long long i, double f) {
+    if (isnan(f)) return 2;
+    if (f >= 9223372036854775808.0) return -1;
+    if (f < -9223372036854775808.0) return 1;
+    double fl = floor(f);
+    long long k = (long long)fl;
+    if (i != k) return i < k ? -1 : 1;
+    return f > fl ? -1 : 0;
+}
+
 static int sw_rowne_(W a, W b) {
     if (sw_jest_liczba(a) && sw_jest_liczba(b)) {
         if (a.t == T_LICZBA && b.t == T_LICZBA) return a.u.i == b.u.i;
+        if (a.t == T_LICZBA && b.t == T_ULAMEK) return sw_cmp_i_f(a.u.i, b.u.f) == 0;
+        if (a.t == T_ULAMEK && b.t == T_LICZBA) return sw_cmp_i_f(b.u.i, a.u.f) == 0;
         return sw_d(a) == sw_d(b);
     }
     if (a.t != b.t) return 0;
@@ -409,18 +491,12 @@ static int sw_rowne_(W a, W b) {
     case T_REGESTR:
         if (a.u.r == b.u.r) return 1;
         if (a.u.r->len != b.u.r->len) return 0;
-        for (size_t i = 0; i < a.u.r->len; i++)
-            if (!sw_rowne_(a.u.r->el[i], b.u.r->el[i])) return 0;
-        return 1;
+        return sw_rowne_regestry(a.u.r, b.u.r);
     case T_ROD: return a.u.o == b.u.o;
     case T_SPIS:
         if (a.u.p == b.u.p) return 1;
         if (a.u.p->len != b.u.p->len) return 0;
-        for (size_t i = 0; i < a.u.p->len; i++) {
-            long long j = sw_spis_szukaj(b.u.p, a.u.p->klucze[i]);
-            if (j < 0 || !sw_rowne_(a.u.p->wart[i], b.u.p->wart[j])) return 0;
-        }
-        return 1;
+        return sw_rowne_spisy(a.u.p, b.u.p);
     default: return 0;
     }
 }
@@ -428,6 +504,8 @@ static int sw_rowne_(W a, W b) {
 static int sw_porownaj(W a, W b, int L) {
     if (sw_jest_liczba(a) && sw_jest_liczba(b)) {
         if (a.t == T_LICZBA && b.t == T_LICZBA) return (a.u.i > b.u.i) - (a.u.i < b.u.i);
+        if (a.t == T_LICZBA && b.t == T_ULAMEK) { int c = sw_cmp_i_f(a.u.i, b.u.f); return c == 2 ? 0 : c; }
+        if (a.t == T_ULAMEK && b.t == T_LICZBA) { int c = sw_cmp_i_f(b.u.i, a.u.f); return c == 2 ? 0 : -c; }
         double x = sw_d(a), y = sw_d(b);
         return (x > y) - (x < y);
     }
@@ -451,7 +529,7 @@ static W sw_niemniejsze(W a, W b, int L) { return sw_sad(sw_porownaj(a, b, L) >=
 static W sw_podzielne(W a, W b, int L) {
     long long x = sw_calk(a, L), y = sw_calk(b, L);
     if (y == 0) sw_grzech(L, "Przez zero nic ſię nie dźieli — rzecz bezbożna.");
-    return sw_sad(x % y == 0);
+    return sw_sad(y == -1 || x % y == 0);
 }
 
 static W sw_parzyste(W a, int L) { return sw_sad(sw_calk(a, L) % 2 == 0); }
@@ -547,6 +625,7 @@ static W sw_spis_nowy(void) {
 }
 
 static long long sw_spis_szukaj(Spis *s, W k) {
+    if (k.t == T_ULAMEK && k.u.f == floor(k.u.f) && fabs(k.u.f) < 9e18) k = sw_liczba((long long)k.u.f);
     if (!s->nidx || (k.t != T_LICZBA && k.t != T_PISMO && k.t != T_SAD)) return -1;
     size_t m = s->nidx - 1, i = (size_t)sw_skrot(k) & m;
     for (;;) {
@@ -632,8 +711,10 @@ static W sw_b_wartosci(W x, int L) {
  * Rachunki: 0 dodać, 1 odjąć, 2 mnożyć, 3 dzielić, 4 dołożyć. */
 static W sw_zaczatek(W cur, W v, int rachunek) {
     if (cur.t != T_NIC) return cur;
-    if (sw_jest_liczba(v)) return rachunek == 2 ? sw_liczba(1) : rachunek == 3 ? cur : sw_liczba(0);
+    /* «Dodaj» zaczyna od regestru i dla liczb (statut: „brakujący klucz zaczyna od pustego
+     * regestru”), inaczej «Dodaj 5 do ocen pod „Jan”» liczyłoby 0 + 5, a nie [5]. */
     if (rachunek == 4) return sw_regestr_nowy();
+    if (sw_jest_liczba(v)) return rachunek == 2 ? sw_liczba(1) : rachunek == 3 ? cur : sw_liczba(0);
     if (rachunek == 0 && v.t == T_PISMO) return sw_pismo_n("", 0);
     return cur;
 }
@@ -732,6 +813,7 @@ static W sw_zawiera(W c, W x, int L) {
         return sw_sad(0);
     }
     if (c.t == T_PISMO) {
+        if (x.t == T_NIC) return sw_sad(0); /* inaczej „nicpoń” zawierałby nic */
         W s = sw_napis(x);
         return sw_sad(memmem(c.u.s->d, c.u.s->len, s.u.s->d, s.u.s->len) != NULL);
     }
@@ -811,9 +893,18 @@ static int sw_slot_w(W o, int pole, int L) {
     return s;
 }
 
-static W sw_pole(W o, int pole, int L) { return o.u.o->pola[sw_slot_w(o, pole, L)]; }
+/* Miejsce pola liczymy osobno, nim sięgniemy po `o.u.o->pola`: w jednym wyrażeniu C wolno
+ * najpierw odczytać `o.u.o` — a gdy `o` to nie ród, lecz liczba, pada SIGSEGV, nim
+ * sw_slot_w zdąży zgłosić grzech, który próba mogłaby złapać. */
+static W sw_pole(W o, int pole, int L) {
+    int s = sw_slot_w(o, pole, L);
+    return o.u.o->pola[s];
+}
 
-static void sw_ustaw_pole(W o, int pole, W v, int L) { o.u.o->pola[sw_slot_w(o, pole, L)] = v; }
+static void sw_ustaw_pole(W o, int pole, W v, int L) {
+    int s = sw_slot_w(o, pole, L);
+    o.u.o->pola[s] = v;
+}
 
 /* ─────────── sortowanie (stateczne, przez scalanie) ─────────── */
 
@@ -861,15 +952,19 @@ static W sw_auto(const char *s, size_t n) {
         char t[64];
         memcpy(t, s + a, b - a);
         t[b - a] = 0;
-        int cyfra = 0;
+        int cyfra = 0, obce = 0;
         for (char *c = t; *c; c++) {
             if (*c == ',') *c = '.';
             if (*c >= '0' && *c <= '9') cyfra = 1;
+            /* strtod czyta i liczby szesnastkowe („0x10”); te są pismem, nie liczbą. */
+            if (*c == 'x' || *c == 'X') obce = 1;
         }
-        if (cyfra) {
+        if (cyfra && !obce) {
             char *end;
+            errno = 0;
             long long i = strtoll(t, &end, 10);
-            if (*end == 0) return sw_liczba(i);
+            /* Liczba ponad miarę („99999999999999999999”) nie przycina się po cichu do LLONG_MAX. */
+            if (*end == 0 && errno != ERANGE) return sw_liczba(i);
             double f = strtod(t, &end);
             if (*end == 0) return sw_ulamek(f);
         }
@@ -914,14 +1009,34 @@ static W sw_wczytaj(void) {
 
 /* ─────────── pliki ─────────── */
 
-static W sw_b_tresc(W p, int L) {
+/* Pismo w roli ścieżki. Znak zerowy w środku uciąłby ją po cichu (C czyta do zera)
+ * i program sięgnąłby po cudzy plik — „tajne\0.txt” znaczyłoby „tajne”. */
+static int sw_ma_zero(W path) { return memchr(path.u.s->d, 0, path.u.s->len) != NULL; }
+static const char *sw_sciezka(W p, int L) {
     W path = sw_napis(p);
-    FILE *f = fopen(path.u.s->d, "rb");
-    if (!f) sw_grzech(L, "Pliku „%s” nie názleźiono.", path.u.s->d);
+    if (sw_ma_zero(path)) sw_grzech(L, "Śćieżká nie może záwieráć znáku zerowego.");
+    return path.u.s->d;
+}
+
+static W sw_b_tresc(W p, int L) {
+    const char *path = sw_sciezka(p, L);
+    FILE *f = fopen(path, "rb");
+    if (!f) sw_grzech(L, "Pliku „%s” nie názleźiono.", path);
+    struct stat st;
+    if (fstat(fileno(f), &st) == 0 && S_ISDIR(st.st_mode)) {
+        fclose(f);
+        sw_grzech(L, "„%s” ieſt kátálogiem, nie plikiem.", path);
+    }
     Buf b = {0};
     char t[4096];
     size_t n;
     while ((n = fread(t, 1, sizeof t, f)) > 0) buf_put(&b, t, n);
+    if (ferror(f)) {
+        int blad = errno;
+        fclose(f);
+        free(b.d);
+        sw_grzech(L, "Pliku „%s” odczytáć nie ſpoſób: %s.", path, strerror(blad));
+    }
     fclose(f);
     W w = sw_pismo_n(b.d ? b.d : "", b.len);
     free(b.d);
@@ -946,9 +1061,9 @@ static W sw_b_wiersze(W p, int L) {
 }
 
 static void sw_zapisz(W tresc, W p, int dopisz, int L) {
-    W path = sw_napis(p);
-    FILE *f = fopen(path.u.s->d, dopisz ? "a" : "w");
-    if (!f) sw_grzech(L, "Do pliku „%s” piſáć nie podobná.", path.u.s->d);
+    const char *path = sw_sciezka(p, L);
+    FILE *f = fopen(path, dopisz ? "a" : "w");
+    if (!f) sw_grzech(L, "Do pliku „%s” piſáć nie podobná.", path);
     Buf b = {0};
     if (tresc.t == T_REGESTR) {
         for (size_t i = 0; i < tresc.u.r->len; i++) {
@@ -970,27 +1085,42 @@ static W sw_b_pierwiastek(W x, int L) {
     if (!sw_jest_liczba(x)) sw_grzech(L, "Pierwiáſtek dobywá ſię ieno z liczby, nie z: %s.", sw_typ(x));
     if (sw_d(x) < 0) sw_grzech(L, "Pierwiáſtká z liczby vieymney nie dobędźieſz.");
     double r = sqrt(sw_d(x));
-    if (x.t == T_LICZBA && r == floor(r)) return sw_liczba((long long)r);
+    if (x.t == T_LICZBA) {
+        /* Liczbę całą daje tylko kwadrat liczby całej. Sprawdzamy w liczbach całych, bo powyżej 2^53
+         * (double)x gubi cyfry i sqrt(10^16 + 1) wychodzi okrągłe 10^8. */
+        unsigned long long n = (unsigned long long)x.u.i, k = (unsigned long long)llround(r);
+        while (k * k > n) k--;
+        while ((k + 1) * (k + 1) <= n) k++;
+        if (k * k == n) return sw_liczba((long long)k);
+    }
     return sw_ulamek(r);
 }
 
 static W sw_b_abs(W x, int L) {
+    if (x.t == T_LICZBA && x.u.i == LLONG_MIN) return sw_ulamek(-(double)x.u.i);
     if (x.t == T_LICZBA) return sw_liczba(x.u.i < 0 ? -x.u.i : x.u.i);
     if (x.t == T_ULAMEK) return sw_ulamek(fabs(x.u.f));
     sw_grzech(L, "Wártość bezwzględną ma ieno liczbá, nie %s.", sw_typ(x));
     return SW_NIC;
 }
 
+/* Ułamek bez reszty jako liczba cała; zbyt wielki, by się w niej zmieścić, zostaje ułamkiem. */
+static W sw_ulamek_w_liczbe(double f, int L) {
+    if (isnan(f) || isinf(f)) sw_grzech(L, "Niewiádomey ániżeli nieſkończoności w liczbę cáłą nie obróciſz.");
+    if (f >= -9223372036854775808.0 && f < 9223372036854775808.0) return sw_liczba((long long)f);
+    return sw_ulamek(f);
+}
+
 static W sw_b_zaokraglenie(W x, int L) {
     if (x.t == T_LICZBA) return x;
-    if (x.t == T_ULAMEK) return sw_liczba(llround(x.u.f));
+    if (x.t == T_ULAMEK) return sw_ulamek_w_liczbe(round(x.u.f), L);
     sw_grzech(L, "Zaokrąglić możná ieno liczbę, nie %s.", sw_typ(x));
     return SW_NIC;
 }
 
 static W sw_b_calkowita(W x, int L) {
     if (x.t == T_LICZBA) return x;
-    if (x.t == T_ULAMEK) return sw_liczba((long long)trunc(x.u.f));
+    if (x.t == T_ULAMEK) return sw_ulamek_w_liczbe(trunc(x.u.f), L);
     sw_grzech(L, "Część cáłkowitą ma ieno liczbá, nie %s.", sw_typ(x));
     return SW_NIC;
 }
@@ -1009,20 +1139,27 @@ static W sw_b_liczbowa(W x, int L) {
 static W sw_b_losowa(W a, W b, int L) {
     long long x = sw_calk(a, L), y = sw_calk(b, L);
     if (x > y) { long long t = x; x = y; y = t; }
-    unsigned long long span = (unsigned long long)(y - x) + 1;
-    unsigned long long r = ((unsigned long long)random() << 31) ^ (unsigned long long)random();
-    return sw_liczba(x + (long long)(r % span));
+    /* Rozpiętość liczona bez znaku: od LLONG_MIN do LLONG_MAX to 2^64, czyli 0 po zawinięciu. */
+    unsigned long long span = (unsigned long long)y - (unsigned long long)x + 1;
+    unsigned long long r = ((unsigned long long)random() << 62) ^ ((unsigned long long)random() << 31) ^
+                           (unsigned long long)random();
+    if (span) r %= span;
+    return sw_liczba((long long)((unsigned long long)x + r));
 }
 
+/* Znak UTF-8 spod `s`: zwraca kod znaku i jego długość w `dl`; -1 dla bajtu, co znakiem nie jest. */
 static int sw_dekoduj(const unsigned char *s, size_t n, size_t *dl) {
-    if (s[0] < 0x80 || n < 2) { *dl = 1; return s[0]; }
-    if ((s[0] & 0xE0) == 0xC0) { *dl = 2; return ((s[0] & 0x1F) << 6) | (s[1] & 0x3F); }
-    if ((s[0] & 0xF0) == 0xE0 && n >= 3) {
-        *dl = 3;
-        return ((s[0] & 0x0F) << 12) | ((s[1] & 0x3F) << 6) | (s[2] & 0x3F);
-    }
     *dl = 1;
-    return s[0];
+    if (s[0] < 0x80) return s[0];
+    size_t k = (s[0] & 0xE0) == 0xC0 ? 2 : (s[0] & 0xF0) == 0xE0 ? 3 : (s[0] & 0xF8) == 0xF0 ? 4 : 0;
+    if (!k || n < k) return -1;
+    int cp = s[0] & (0x7F >> k);
+    for (size_t i = 1; i < k; i++) {
+        if ((s[i] & 0xC0) != 0x80) return -1;
+        cp = (cp << 6) | (s[i] & 0x3F);
+    }
+    *dl = k;
+    return cp;
 }
 
 static void sw_koduj(Buf *b, int cp) {
@@ -1037,8 +1174,29 @@ static void sw_koduj(Buf *b, int cp) {
     }
 }
 
-static const int sw_male_l[] = {0x105, 0x107, 0x119, 0x142, 0x144, 0xF3, 0x15B, 0x17A, 0x17C, 0xE1, 0xE9};
-static const int sw_wielkie_l[] = {0x104, 0x106, 0x118, 0x141, 0x143, 0xD3, 0x15A, 0x179, 0x17B, 0xC1, 0xC9};
+/* Wielka (albo mała) para litery z Latin-1 i Latin Extended-A, gdzie leżą litery polskie
+ * (ą ć ę ł ń ó ś ź ż), dawne (á é ſ) i sąsiedzkie (ä ö ü č ř…). Bez setlocale: wynik nie zależy
+ * od tego, gdzie program puszczono. */
+static int sw_wielka(int c) {
+    if (c >= 'a' && c <= 'z') return c - 32;
+    if (c >= 0xE0 && c <= 0xFE && c != 0xF7) return c - 0x20;
+    if (c == 0xFF) return 0x178;
+    if (c == 0x131) return 'I';
+    if (c == 0x17F) return 'S'; /* ſ */
+    if ((c >= 0x100 && c <= 0x137) || (c >= 0x14A && c <= 0x177)) return c & 1 ? c - 1 : c;
+    if ((c >= 0x139 && c <= 0x148) || (c >= 0x179 && c <= 0x17E)) return c & 1 ? c : c - 1;
+    return c;
+}
+
+static int sw_mala(int c) {
+    if (c >= 'A' && c <= 'Z') return c + 32;
+    if (c >= 0xC0 && c <= 0xDE && c != 0xD7) return c + 0x20;
+    if (c == 0x178) return 0xFF;
+    if (c == 0x130) return 'i';
+    if ((c >= 0x100 && c <= 0x137) || (c >= 0x14A && c <= 0x177)) return c & 1 ? c : c + 1;
+    if ((c >= 0x139 && c <= 0x148) || (c >= 0x179 && c <= 0x17E)) return c & 1 ? c + 1 : c;
+    return c;
+}
 
 static W sw_litery(W x, int wielkie, int L) {
     if (x.t != T_PISMO) sw_grzech(L, "Litery zmieniáć możná ieno w piśmie, nie w: %s.", sw_typ(x));
@@ -1047,14 +1205,11 @@ static W sw_litery(W x, int wielkie, int L) {
     size_t n = x.u.s->len, i = 0;
     while (i < n) {
         size_t dl;
-        int cp = sw_dekoduj(s + i, n - i, &dl);
-        if (cp < 0x80) cp = wielkie ? (cp >= 'a' && cp <= 'z' ? cp - 32 : cp) : (cp >= 'A' && cp <= 'Z' ? cp + 32 : cp);
-        else
-            for (int k = 0; k < 11; k++) {
-                if (wielkie && cp == sw_male_l[k]) { cp = sw_wielkie_l[k]; break; }
-                if (!wielkie && cp == sw_wielkie_l[k]) { cp = sw_male_l[k]; break; }
-            }
-        sw_koduj(&b, cp);
+        int stary = sw_dekoduj(s + i, n - i, &dl), cp = stary;
+        if (cp >= 0) cp = wielkie ? sw_wielka(cp) : sw_mala(cp);
+        /* Znak bez pary (emoji, ß, zły bajt) przechodzi bajt w bajt. */
+        if (cp == stary) buf_put(&b, (const char *)s + i, dl);
+        else sw_koduj(&b, cp);
         i += dl;
     }
     W w = sw_pismo_n(b.d ? b.d : "", b.len);
@@ -1270,18 +1425,21 @@ static W sw_slownie(W a, int L) {
 
 static W sw_b_istnieje(W p, int L) {
     (void)L;
+    W path = sw_napis(p);
     struct stat st;
-    return sw_sad(stat(sw_napis(p).u.s->d, &st) == 0);
+    return sw_sad(!sw_ma_zero(path) && stat(path.u.s->d, &st) == 0);
 }
 
 static W sw_b_usun_plik(W p, int L) {
-    const char *path = sw_napis(p).u.s->d;
+    const char *path = sw_sciezka(p, L);
     if (remove(path) != 0) sw_grzech(L, "Pliku „%s” vſunąć nie podobná: %s.", path, strerror(errno));
     return SW_NIC;
 }
 
 static W sw_b_katalog(W p, int L) {
     W path = sw_napis(p);
+    sw_sciezka(path, L);
+    if (!path.u.s->len) sw_grzech(L, "Kátálog o puſtym miániu záłożony być nie może.");
     char *d = path.u.s->d;
     for (size_t i = 1; i <= path.u.s->len; i++) {
         if (i < path.u.s->len && d[i] != '/') continue;
@@ -1300,7 +1458,7 @@ static W sw_b_katalog(W p, int L) {
 }
 
 static W sw_b_przenies(W a, W b, int L) {
-    const char *z = sw_napis(a).u.s->d, *dokad = sw_napis(b).u.s->d;
+    const char *z = sw_sciezka(a, L), *dokad = sw_sciezka(b, L);
     if (rename(z, dokad) != 0) sw_grzech(L, "Pliku „%s” do „%s” przenieść nie podobná: %s.", z, dokad, strerror(errno));
     return SW_NIC;
 }
@@ -1308,7 +1466,7 @@ static W sw_b_przenies(W a, W b, int L) {
 static int sw_por_miana(const void *a, const void *b) { return strcmp(*(char *const *)a, *(char *const *)b); }
 
 static W sw_b_zawartosc(W p, int L) {
-    const char *path = sw_napis(p).u.s->d;
+    const char *path = sw_sciezka(p, L);
     DIR *dir = opendir(path);
     if (!dir) sw_grzech(L, "Kátálogu „%s” przeyrzeć nie podobná: %s.", path, strerror(errno));
     char **miana = NULL;
@@ -1323,7 +1481,7 @@ static W sw_b_zawartosc(W p, int L) {
         miana[n++] = strdup(e->d_name);
     }
     closedir(dir);
-    qsort(miana, n, sizeof(char *), sw_por_miana);
+    if (n) qsort(miana, n, sizeof(char *), sw_por_miana); /* qsort(NULL, 0…) to w C rzecz niedozwolona */
     W w = sw_regestr_nowy();
     for (size_t i = 0; i < n; i++) {
         sw_wloz(w, sw_pismo_n(miana[i], strlen(miana[i])));

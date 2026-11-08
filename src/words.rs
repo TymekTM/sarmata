@@ -136,8 +136,8 @@ pub enum NumClass {
     Teen,
     Ten,
     Hundred,
-    Thousand,
-    Million,
+    /// Tysiąc, milion, miliard… — mnożą grupę przed sobą.
+    Power,
 }
 
 const ADJ_ENDINGS: &[&str] = &[
@@ -220,7 +220,7 @@ pub static NUMBERS: LazyLock<HashMap<String, (i64, NumClass)>> = LazyLock::new(|
         (900, Hundred, &["dziewięćset", "dziewięciuset"]),
         (
             1000,
-            Thousand,
+            Power,
             &[
                 "tysiąc",
                 "tysiące",
@@ -232,8 +232,29 @@ pub static NUMBERS: LazyLock<HashMap<String, (i64, NumClass)>> = LazyLock::new(|
         ),
         (
             1_000_000,
-            Million,
+            Power,
             &["milion", "miliony", "milionów", "miliona", "milionem"],
+        ),
+        // Aż do tryliona, bo tyle wypisuje «słownie», a skryba ma umieć przeczytać to z powrotem.
+        (
+            1_000_000_000,
+            Power,
+            &["miliard", "miliardy", "miliardów", "miliarda", "miliardem"],
+        ),
+        (
+            1_000_000_000_000,
+            Power,
+            &["bilion", "biliony", "bilionów", "biliona", "bilionem"],
+        ),
+        (
+            1_000_000_000_000_000,
+            Power,
+            &["biliard", "biliardy", "biliardów", "biliarda", "biliardem"],
+        ),
+        (
+            1_000_000_000_000_000_000,
+            Power,
+            &["trylion", "tryliony", "trylionów", "tryliona", "trylionem"],
         ),
     ];
     let mut m = HashMap::new();

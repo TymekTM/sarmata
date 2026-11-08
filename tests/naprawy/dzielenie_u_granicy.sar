@@ -1,0 +1,15 @@
+Przedmowa. Najmniejsza liczba przez minus jeden nie mieści się w liczbie; w C to SIGFPE.
+
+Niechay naymnieysza będzie minus 9223372036854775807 minus 1.
+Niechay wstecz będzie minus jeden.
+Obwieść naymnieysza podzielone przez wstecz.
+Obwieść reszta z dzielenia naymnieyszey przez wstecz.
+Ieśli naymnieysza iest podzielna przez wstecz, obwieść „podzielna”.
+Obwieść wartość bezwzględna z naymnieyszey.
+Obwieść losowa liczba od naymnieyszey do 9223372036854775807 iest liczbą całkowitą.
+
+Przypis: reszta z ułamków ma znak dzielnika, iako u liczb całych.
+Obwieść reszta z dzielenia minus 7 przez 3, reszta z dzielenia minus 7,0 przez 3.
+Obwieść reszta z dzielenia 7 przez minus 3, reszta z dzielenia 7,0 przez minus 3.
+
+Amen.

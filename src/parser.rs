@@ -165,7 +165,8 @@ fn describe(t: &Token) -> String {
 fn subject_of(e: &Expr) -> Option<Expr> {
     match e {
         Expr::Bin(_, l, _, _) | Expr::Un(_, l, _) => Some((**l).clone()),
-        Expr::Not(inner, _) => subject_of(inner),
+        // „Ieśli x iest większe niż ieden, a mnieysze niż dziesięć: … A ieśli podzielne przez trzy”
+        Expr::Not(inner, _) | Expr::And(inner, _, _) | Expr::Or(inner, _, _) => subject_of(inner),
         _ => None,
     }
 }
@@ -1644,8 +1645,9 @@ impl Parser {
                 Ok(Stmt::Throw(v, line))
             }
             Kw::Zakoncz => {
-                // „Zakończ opowieść.”, „Zakończ z grzechem.”, „Zakończ z kodem trzy.”
-                while is_name_word(self.peek()) && self.find_names(self.pos).is_empty() {
+                // „Zakończ opowieść.”, „Zakończ z grzechem.”, „Zakończ z kodem trzy.” Słowa przed
+                // «z» to sama ozdoba, nawet gdy „program” bywa też mianem zmiennej.
+                while is_name_word(self.peek()) {
                     self.pos += 1;
                 }
                 let code = if self.is_kw(Kw::Z) && self.norm_at(1).starts_with("grzech") {
@@ -2425,6 +2427,8 @@ impl Parser {
                     let toks = lexer::lex_fragment(text, *line, *col)?;
                     let saved = std::mem::replace(&mut self.toks, toks);
                     let saved_pos = std::mem::replace(&mut self.pos, 0);
+                    // Miejsca w `comp_active` liczą się w słowach zewnętrznych, nie we wstawce.
+                    let saved_comp = std::mem::take(&mut self.comp_active);
                     let r = self.parse_expr().and_then(|e| {
                         if self.peek().k == K::Eof {
                             Ok(e)
@@ -2434,6 +2438,7 @@ impl Parser {
                     });
                     self.toks = saved;
                     self.pos = saved_pos;
+                    self.comp_active = saved_comp;
                     out.push(r?);
                 }
             }
@@ -2442,10 +2447,19 @@ impl Parser {
     }
 
     fn parse_number_words(&mut self) -> R<Expr> {
+        let first = self.peek().clone();
+        let too_big = || {
+            err_at(
+                &first,
+                "Liczbá to większa niż wſzytkie ſkárby Rzeczypoſpolitey.",
+            )
+        };
         let mut total: i64 = 0;
         let mut group: i64 = 0;
         let mut stage = 4; // 3 setki, 2 dziesiątki, 1 jedności
-        let mut big_stage = 6; // 5 miliony, 4 tysiące
+        let mut power = i64::MAX; // ostatni rząd (tysiąc, milion…); następny musi być mniejszy
+        // Czy przed „tysiącem” padła liczba: samo „tysiąc” to 1000, lecz „zero tysięcy” to 0.
+        let mut named = false;
         while self.is_kw(Kw::Liczebnik) {
             let (v, class) = number(&self.peek().norm).unwrap();
             let ok = match class {
@@ -2453,8 +2467,7 @@ impl Parser {
                 NumClass::Ten => stage > 2,
                 NumClass::Teen => stage > 2,
                 NumClass::Unit => stage > 1,
-                NumClass::Thousand => big_stage > 4,
-                NumClass::Million => big_stage > 5,
+                NumClass::Power => v < power,
             };
             if !ok {
                 break;
@@ -2463,25 +2476,32 @@ impl Parser {
                 NumClass::Hundred => {
                     group += v;
                     stage = 3;
+                    named = true;
                 }
                 NumClass::Ten => {
                     group += v;
                     stage = 2;
+                    named = true;
                 }
                 NumClass::Teen | NumClass::Unit => {
                     group += v;
                     stage = 1;
+                    named = true;
                 }
-                NumClass::Thousand | NumClass::Million => {
-                    total += group.max(1) * v;
+                NumClass::Power => {
+                    total = (if named { group } else { 1 })
+                        .checked_mul(v)
+                        .and_then(|x| x.checked_add(total))
+                        .ok_or_else(too_big)?;
                     group = 0;
+                    named = false;
                     stage = 4;
-                    big_stage = if class == NumClass::Thousand { 4 } else { 5 };
+                    power = v;
                 }
             }
             self.pos += 1;
         }
-        let n = total + group;
+        let n = total.checked_add(group).ok_or_else(too_big)?;
         if self.is_kw(Kw::I) && self.kw_at(1) == Some(Kw::Pol) {
             self.pos += 2;
             return Ok(Expr::Float(n as f64 + 0.5));
@@ -2492,6 +2512,11 @@ impl Parser {
     fn parse_word_primary(&mut self) -> R<Expr> {
         let t = self.peek().clone();
         let line = t.line;
+        // Wersalikowe „I” w miejscu wartości to rzymska jedynka, nie spójnik „i”.
+        if t.kw == Some(Kw::I) && t.raw == "I" {
+            self.pos += 1;
+            return Ok(Expr::Int(1));
+        }
         // „pierwsza liczba” bywa mianem rzeczy, nie zaś pierwszym elementem regestru „liczba”.
         let ordinal_name = matches!(t.kw, Some(Kw::Ordinal(_)))
             && matches!(

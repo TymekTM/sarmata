@@ -7,7 +7,12 @@
 /// małe litery, `ſ`→`s`, `á`→`a`, `é`→`e`, `v`→`u`, `j`/`y`→`i`, polskie znaki bez kresek.
 pub fn normalize(word: &str) -> String {
     let mut out = String::with_capacity(word.len());
-    for ch in word.chars().flat_map(|c| c.to_lowercase()) {
+    // Kreski i ogonki w zapisie rozłożonym (NFD) odpadają, jak odpadają w złożonym: „ś” → „s”.
+    for ch in word
+        .chars()
+        .filter(|&c| !is_mark(c))
+        .flat_map(|c| c.to_lowercase())
+    {
         out.push(match ch {
             'ſ' | 'ś' => 's',
             'á' | 'ą' | 'à' => 'a',
@@ -23,6 +28,12 @@ pub fn normalize(word: &str) -> String {
         });
     }
     out
+}
+
+/// Znak łączący (kreska, ogonek, kropka) z zapisu rozłożonego NFD, w jakim niektóre edytory
+/// (np. na macOS) zapisują „ś” jako „s” + U+0301. Należy do słowa, choć sam literą nie jest.
+pub fn is_mark(c: char) -> bool {
+    ('\u{300}'..='\u{36f}').contains(&c)
 }
 
 /// Końcówki fleksyjne (już znormalizowane), dłuższe przed krótszymi.

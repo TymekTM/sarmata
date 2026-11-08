@@ -5,7 +5,7 @@
 //! więc jedno zdanie wolno rozpisać na wiele wierszy jak strofę.
 
 use crate::error::CompileError;
-use crate::text::normalize;
+use crate::text::{is_mark, normalize};
 use crate::words::{COMMENT_STARTERS, FILLERS, Kw, keyword};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -91,7 +91,10 @@ pub fn lex(src: &str, base: usize) -> R<Vec<Token>> {
             comment_open = false;
             continue;
         }
-        let first: String = trimmed.chars().take_while(|c| c.is_alphabetic()).collect();
+        let first: String = trimmed
+            .chars()
+            .take_while(|&c| c.is_alphabetic() || is_mark(c))
+            .collect();
         let continues = comment_open && trimmed.starts_with(char::is_lowercase);
         if continues || (!first.is_empty() && COMMENT_STARTERS.contains(&normalize(&first))) {
             comment_open = !trimmed.trim_end().ends_with(['.', '!', '?']);
@@ -120,16 +123,29 @@ pub fn lex(src: &str, base: usize) -> R<Vec<Token>> {
             }
         }
         // Cytat nie zamknięty u końca wiersza ciągnie się w następnych, aż do pustego wiersza.
+        // `szwy` pamiętają, gdzie w sklejonym tekście zaczyna się każdy dalszy wiersz (znak,
+        // numer wiersza, wcięcie), by słowa i grzechy za szwem wskazywały prawdziwe miejsce.
         let mut text = line.to_string();
+        let mut szwy: Vec<(usize, usize, usize)> = Vec::new();
         while quote_open(&text) && li < lines.len() && !lines[li].trim().is_empty() {
             text.push(' ');
-            text.push_str(lines[li].trim());
+            let next = lines[li];
+            let indent = next.chars().count() - next.trim_start().chars().count();
+            szwy.push((text.chars().count(), base + li + 1, indent));
+            text.push_str(next.trim());
             li += 1;
             last_line = base + li;
         }
+        let place = |col: usize| match szwy.iter().rev().find(|s| col > s.0) {
+            Some(&(start, l, indent)) => (l, col - start + indent),
+            None => (lineno, col),
+        };
         let before = out.len();
         let chars: Vec<char> = text.chars().collect();
-        lex_chars(&chars, lineno, 0, &mut out)?;
+        lex_chars(&chars, lineno, 0, &mut out).map_err(|mut e| {
+            (e.line, e.col) = place(e.col);
+            e
+        })?;
         if out.len() > before {
             // „…wynosi pięć.” — kropka w cudzysłowie u końca wiersza też kończy zdanie.
             if let K::Str(parts) = &out.last().unwrap().k
@@ -144,6 +160,18 @@ pub fn lex(src: &str, base: usize) -> R<Vec<Token>> {
                 ));
             }
             boundary = matches!(&out.last().unwrap().k, K::P(p) if TERMINATORS.contains(p));
+        }
+        if !szwy.is_empty() {
+            for t in &mut out[before..] {
+                (t.line, t.col) = place(t.col);
+                if let K::Str(parts) = &mut t.k {
+                    for p in parts {
+                        if let StrPart::Expr(_, l, c) = p {
+                            (*l, *c) = place(*c);
+                        }
+                    }
+                }
+            }
         }
     }
     while indents.len() > 1 {
@@ -175,27 +203,43 @@ fn closers(open: char) -> Option<&'static [char]> {
 
 /// Czy wiersz kończy się wewnątrz cytatu.
 fn quote_open(text: &str) -> bool {
+    let chars: Vec<char> = text.chars().collect();
     let mut inside: Option<&[char]> = None;
-    let mut chars = text.chars();
-    while let Some(c) = chars.next() {
+    let mut i = 0;
+    while i < chars.len() {
+        let c = chars[i];
         match inside {
             None => inside = closers(c),
-            Some(_) if c == '\\' => {
-                chars.next();
-            }
-            // Wstawka może mieć własne cytaty: „… {złączenie x przez „, ”} …”.
-            Some(_) if c == '{' => {
-                for d in chars.by_ref() {
-                    if d == '}' {
-                        break;
-                    }
-                }
-            }
+            Some(_) if c == '\\' => i += 1,
+            Some(_) if c == '{' => match interp_end(&chars, i + 1) {
+                Some(j) => i = j,
+                None => return true,
+            },
             Some(cl) if cl.contains(&c) => inside = None,
             Some(_) => {}
         }
+        i += 1;
     }
     inside.is_some()
+}
+
+/// Miejsce `}`, co zamyka wstawkę zaczętą tuż przed `from`. Wstawka może mieć własne cytaty
+/// („… {złączenie x przez „, ”} …”), a w nich i klamrę: „{złączenie x przez „}”}”.
+fn interp_end(chars: &[char], from: usize) -> Option<usize> {
+    let mut inner: Option<&[char]> = None;
+    let mut j = from;
+    while j < chars.len() {
+        let d = chars[j];
+        match inner {
+            None if d == '}' => return Some(j),
+            None => inner = closers(d),
+            Some(_) if d == '\\' => j += 1,
+            Some(cl) if cl.contains(&d) => inner = None,
+            Some(_) => {}
+        }
+        j += 1;
+    }
+    None
 }
 
 fn indent_width(line: &str) -> usize {
@@ -237,9 +281,12 @@ fn lex_chars(chars: &[char], line: usize, col_off: usize, out: &mut Vec<Token>) 
             i += 1;
             continue;
         }
-        if c.is_alphabetic() {
+        // „_miano” też wchodzi tu, by dostać upomnienie o podkreślniku, nie o obcym znaku.
+        if c.is_alphabetic() || c == '_' {
             let start = i;
-            while i < chars.len() && (chars[i].is_alphanumeric() || chars[i] == '_') {
+            while i < chars.len()
+                && (chars[i].is_alphanumeric() || chars[i] == '_' || is_mark(chars[i]))
+            {
                 i += 1;
             }
             let raw: String = chars[start..i].iter().collect();
@@ -279,19 +326,24 @@ fn lex_chars(chars: &[char], line: usize, col_off: usize, out: &mut Vec<Token>) 
                 }
             }
             let raw: String = chars[start..i].iter().collect();
+            let too_big = || {
+                CompileError::new(
+                    line,
+                    col,
+                    raw.chars().count(),
+                    "Liczbá to większa niż wſzytkie ſkárby Rzeczypoſpolitey.",
+                )
+            };
             let k = if is_float {
-                K::Float(raw.replace(',', ".").parse().unwrap())
+                // Ułamek ponad miarę f64 Rust czyta jako nieskończoność, a tej C nie zapisze.
+                match raw.replace(',', ".").parse::<f64>() {
+                    Ok(f) if f.is_finite() => K::Float(f),
+                    _ => return Err(too_big()),
+                }
             } else {
                 match raw.parse::<i64>() {
                     Ok(n) => K::Int(n),
-                    Err(_) => {
-                        return Err(CompileError::new(
-                            line,
-                            col,
-                            raw.chars().count(),
-                            "Liczbá to większa niż wſzytkie ſkárby Rzeczypoſpolitey.",
-                        ));
-                    }
+                    Err(_) => return Err(too_big()),
                 }
             };
             out.push(Token::new(k, raw, line, col));
@@ -357,18 +409,14 @@ fn lex_string(chars: &[char], start: usize, line: usize, col_off: usize) -> R<(T
                     parts.push(StrPart::Lit(std::mem::take(&mut buf)));
                 }
                 let inner_start = i + 1;
-                let mut j = inner_start;
-                while j < chars.len() && chars[j] != '}' {
-                    j += 1;
-                }
-                if j >= chars.len() {
+                let Some(j) = interp_end(chars, inner_start) else {
                     return Err(CompileError::new(
                         line,
                         col_off + i + 1,
                         1,
                         "Wſtáwká „{” otwártá, á „}” iey nie zámyka.",
                     ));
-                }
+                };
                 let text: String = chars[inner_start..j].iter().collect();
                 parts.push(StrPart::Expr(text, line, col_off + inner_start + 1));
                 i = j + 1;

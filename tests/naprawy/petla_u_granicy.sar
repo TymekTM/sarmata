@@ -1,0 +1,26 @@
+Przedmowa. Pętla do naywiększey liczby czyni dwa kroki i staie, nie zaś przewija licznik na ujemne.
+
+Niechay ile będzie zero.
+Dla każdey liczby od 9223372036854775806 do 9223372036854775807:
+    Zwiększ ile o ieden.
+    Ieśli ile iest większe niż pięć, przerwij.
+Obwieść ile.
+
+Niechay dół będzie minus 9223372036854775807 minus 1.
+Niechay ile będzie zero.
+Dla każdey liczby od dół plus ieden do dół co minus ieden:
+    Zwiększ ile o ieden.
+    Ieśli ile iest większe niż pięć, przerwij.
+Obwieść ile.
+
+Niechay ile będzie zero.
+Dla każdey liczby od zera do 9223372036854775807 co 4611686018427387904:
+    Zwiększ ile o ieden.
+    Ieśli ile iest większe niż pięć, przerwij.
+Obwieść ile.
+
+Przypis: regestr składany z takiey pętli też ma dwa elementy, nie zaś rośnie bez końca.
+Niechay r będzie x dla każdego x od 9223372036854775806 do 9223372036854775807.
+Obwieść r.
+
+Amen.
