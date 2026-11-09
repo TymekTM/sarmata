@@ -148,6 +148,9 @@ fn grzechy_sa_wytykane() {
         let Ok(want) = std::fs::read_to_string(src.with_extension("grzech")) else {
             continue;
         };
+        // Na Windows piſmá z gita maią końce CRLF — przed zrównánym z kazániami
+        // ſkryby (które mówią iednym «\n») ſprowádźmy ie do ſpołu.
+        let want = want.replace("\r\n", "\n");
         let want = want.trim();
         let exe = scratch("grzech");
         let build = Command::new(sarmata())

@@ -1111,7 +1111,14 @@ static const char *sw_sciezka(W p, int L) {
 static W sw_b_tresc(W p, int L) {
     const char *path = sw_sciezka(p, L);
     FILE *f = fopen(path, "rb");
-    if (!f) sw_grzech(L, "Pliku „%s” nie názleźiono.", path);
+    if (!f) {
+        /* Ná Windows otworzyć kátálogu iáko pliku nie vdáło ſię wcale,
+         * á przecie y tu kázánie o kátálogu prziſtoi, nie o bráku pliku. */
+        struct stat st;
+        if (stat(path, &st) == 0 && S_ISDIR(st.st_mode))
+            sw_grzech(L, "„%s” ieſt kátálogiem, nie plikiem.", path);
+        sw_grzech(L, "Pliku „%s” nie názleźiono.", path);
+    }
     struct stat st;
     if (fstat(fileno(f), &st) == 0 && S_ISDIR(st.st_mode)) {
         fclose(f);

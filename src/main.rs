@@ -123,6 +123,11 @@ fn same_file(a: &Path, b: &Path) -> bool {
 /// więc obwieszczamy, co go zabiło, i zwracamy 128 + numer sygnału, jak czyni powłoka.
 fn exit_code(status: std::process::ExitStatus) -> u8 {
     if let Some(code) = status.code() {
+        #[cfg(windows)]
+        if let Some(sig) = sygnal_z_kodu(code) {
+            eprintln!("{}", signal_msg(sig));
+            return (128 + sig) as u8;
+        }
         return code as u8;
     }
     #[cfg(unix)]
@@ -134,6 +139,21 @@ fn exit_code(status: std::process::ExitStatus) -> u8 {
         }
     }
     1
+}
+
+/// Na Windows żywiołowe zgony (cudy NTSTATUS-u 0xC0000…) wychodzą iákoby zwykłym
+/// kodem, á przecie powłoki tam 128 y sygnału nie znaią. Rozpoznayemy i tedy,
+/// by ſkryba y tu obwieſzczał, co program zabiło.
+#[cfg(windows)]
+fn sygnal_z_kodu(code: i32) -> Option<i32> {
+    match code as u32 {
+        0xC0000005 => Some(11), // ſięgnięto w pámięć cudzą
+        0xC00000FD => Some(11), // ſtoſ ſię przepełnił
+        0xC0000094 => Some(8),  // dzielenie przez zero
+        0xC0000095 => Some(8),  // ráchunek ſię przepełnił
+        0x40000015 => Some(6),  // prázerwány
+        _ => None,
+    }
 }
 
 fn signal_msg(sig: i32) -> String {
@@ -350,6 +370,10 @@ fn rozmowa() -> Result<ExitCode, String> {
                 if let Some(sig) = out.status.signal() {
                     eprintln!("{}", signal_msg(sig));
                 }
+            }
+            #[cfg(windows)]
+            if let Some(sig) = out.status.code().and_then(sygnal_z_kodu) {
+                eprintln!("{}", signal_msg(sig));
             }
             if tty {
                 eprintln!("(To zdánie przepádá — piſmo zoſtáie, iákie było.)");
