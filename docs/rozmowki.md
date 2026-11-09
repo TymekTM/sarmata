@@ -446,7 +446,8 @@ Bez dwukropka działają jak `obwieść`.
 | sort | `posortuj`, `uporządkuj`, `ułóż` |
 | key= | `według`, `wedle`, `podług` |
 | kierunek | `rosnąco`, `malejąco` |
-| delete | `usuń`, `wyrzuć`, `wymaż` |
+| delete | `usuń`, `wyrzuć` |
+| clear screen | `wymaż`, `zmaż` (+ `ekran`) |
 | zapis do pliku | `zapisz`, `spisz` (nadpisuje), `dopisz` (na koniec) |
 | plik | `plik`, `pliku`, `plikiem`, `pliki`, `plików` |
 | mkdir | `utwórz`, `stwórz`, `załóż` (+ `katalog`) |

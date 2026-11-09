@@ -23,6 +23,8 @@ pub enum Kw {
     Rzekl,
     Zapytaj,
     Wczytaj,
+    /// „Wymaż ekran.” — gąbka po tablicy, by scena następna była czysta.
+    Wymaz,
     // rozgałęzienia
     Jesli,
     Azali,
@@ -349,6 +351,7 @@ pub static KEYWORDS: LazyLock<HashMap<String, Kw>> = LazyLock::new(|| {
         Zapytaj,
     );
     add(&mut m, &["wczytaj", "pobierz", "weź", "przyjmij"], Wczytaj);
+    add(&mut m, &["wymaż", "zmaż"], Wymaz);
 
     add(
         &mut m,
@@ -438,7 +441,7 @@ pub static KEYWORDS: LazyLock<HashMap<String, Kw>> = LazyLock::new(|| {
     add(&mut m, &["według", "wedle", "podług"], Wedlug);
     add(&mut m, &["rosnąco"], Rosnaco);
     add(&mut m, &["malejąco"], Malejaco);
-    add(&mut m, &["usuń", "wyrzuć", "wymaż"], Usun);
+    add(&mut m, &["usuń", "wyrzuć"], Usun);
     add(&mut m, &["zapisz", "spisz"], Zapisz);
     add(&mut m, &["dopisz"], Dopisz);
     add(

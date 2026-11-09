@@ -1661,6 +1661,14 @@ impl Parser {
                 };
                 Ok(Stmt::Exit(code, line))
             }
+            Kw::Wymaz => {
+                // „Wymaż ekran.” — gąbka po tablicy, by scena następna była czysta.
+                if !self.norm_at(0).starts_with("ekran") {
+                    return Err(self.expected("«ekran» (np. «Wymaż ekran»)"));
+                }
+                self.pos += 1;
+                Ok(Stmt::Expr(Expr::Builtin("sw_b_wymaz_ekran", vec![], line)))
+            }
             Kw::Utworz => {
                 if !self.norm_at(0).starts_with("katalog") {
                     return Err(self.expected("«kátálog» (np. «Vtwórz kátálog „kroniki”»)"));

@@ -66,7 +66,7 @@ fn scope(kw: Kw) -> &'static str {
             "keyword.operator.sarmata"
         }
         Obwiesc | Rzekl | Zapytaj | Wczytaj | Uczyn | Zwieksz | Zmniejsz | Dodaj | Odejmij
-        | Pomnoz | Podziel | Posortuj | Usun | Zapisz | Dopisz | Utworz | Przenies => {
+        | Pomnoz | Podziel | Posortuj | Usun | Zapisz | Dopisz | Utworz | Przenies | Wymaz => {
             "support.function.verb.sarmata"
         }
         _ => "keyword.other.sarmata",

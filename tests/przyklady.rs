@@ -188,6 +188,25 @@ fn grzechy_sa_wytykane() {
 }
 
 #[test]
+fn wymaz_ekran_w_rurze_sie_troskliwie_milczy() {
+    let src = scratch("wymaz-ekranu.sar");
+    std::fs::write(
+        &src,
+        "Obwieść „brudno”.\nWymaż ekran.\nObwieść „czysto”.\nAmen.\n",
+    )
+    .unwrap();
+    let run = Command::new(sarmata())
+        .arg("uruchom")
+        .arg(&src)
+        .output()
+        .unwrap();
+    let err = String::from_utf8_lossy(&run.stderr);
+    assert!(run.status.success(), "stderr: {err}");
+    // Wyjście w rurę: gąbka nie pisze nic, ani kodów ANSI, ani pustych wierszy.
+    assert_eq!(String::from_utf8_lossy(&run.stdout), "brudno\nczysto\n");
+}
+
+#[test]
 fn pismo_bez_rozszerzenia_nie_bywa_nadpisane() {
     let src = scratch("bez-rozszerzenia");
     let tresc = "Obwieść „witay”.\nAmen.\n";

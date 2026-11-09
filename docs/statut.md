@@ -569,6 +569,17 @@ Przenieś plik „a.txt” do „kronika/a.txt”.    (też zmienia miano)
 Obwieść zawartość katalogu „kronika”.        (regestr mian, alfabetycznie)
 ```
 
+### Ekran
+
+```
+Wymaż ekran.                                  (gąbka po tablicy przed nową sceną)
+```
+
+Na terminalu wymazuje wszystko i wraca kursorem w lewy górny róg (kody ANSI;
+na Windows skryba włącza je sobie sam). Gdy wyjście idzie do pliku albo rury,
+gąbka suszy się w spokoju — nic nie robi, więc kroniki maią czyste pisma.
+Na konsolach zbyt starych na kody ANSI zmieli ekran czterdziestoma pustymi wierszami.
+
 ### Słowa wywołania
 
 `słowa wywołania` to regestr słów, z którymi program uruchomiono (bez miana samego

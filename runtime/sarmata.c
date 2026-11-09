@@ -18,6 +18,10 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
+/* Tryb wymazywania ekranu: 0 = wyjście do pliku albo rury (nie ma czego),
+   1 = kody ANSI, 2 = stara konsola Windows (zmielić pustymi wierszami). */
+static int sw_ekran;
+
 /* ─────────── Windows (MinGW) — braki POSIX-u ─────────── */
 #if defined(_WIN32)
 #include <direct.h>
@@ -26,12 +30,22 @@
 
 __declspec(dllimport) int __stdcall SetConsoleOutputCP(unsigned int);
 __declspec(dllimport) int __stdcall SetConsoleCP(unsigned int);
+__declspec(dllimport) void *__stdcall GetStdHandle(unsigned long);
+__declspec(dllimport) int __stdcall GetConsoleMode(void *, unsigned long *);
+__declspec(dllimport) int __stdcall SetConsoleMode(void *, unsigned long);
 /* Konsola po ludzku: UTF-8 á końce wierſzów po iednym «\n», iáko na Linuxie. */
 static void sw_konsola_utf8(void) {
     _setmode(_fileno(stdout), _O_BINARY);
     _setmode(_fileno(stderr), _O_BINARY);
     SetConsoleOutputCP(65001);
     SetConsoleCP(65001);
+    /* Kody ANSI (0xFFFFFFF5 to STD_OUTPUT_HANDLE): bez tego conhost wydrukowałby
+       «←[2J» zamiast wymazać. Stare konstytucje — puste wiersze, widać wędrowców. */
+    void *uchwyt = GetStdHandle(0xFFFFFFF5ul);
+    unsigned long tryb = 0;
+    if (uchwyt && GetConsoleMode(uchwyt, &tryb)) {
+        sw_ekran = SetConsoleMode(uchwyt, tryb | 0x0004) ? 1 : 2;
+    }
 }
 
 #define mkdir(path, mode) _mkdir(path)
@@ -384,6 +398,19 @@ static void sw_obwiesc(int n, W *a, int nowy_wiersz) {
     if (nowy_wiersz) buf_str(&b, "\n");
     if (b.len) fwrite(b.d, 1, b.len, stdout);
     free(b.d);
+}
+
+/* „Wymaż ekran.” — gąbka po tablicy: kody ANSI, á gdzie się nie da, pustymi wierszami.
+   Przy wyjściu do pliku albo rury gąbka suszy się w spokoju — nic nie robi. */
+static W sw_b_wymaz_ekran(int L) {
+    (void)L;
+    if (sw_ekran == 1) {
+        fputs("\033[2J\033[H", stdout); /* wymaż wszystko á wróć w lewy górny róg */
+    } else if (sw_ekran == 2) {
+        for (int i = 0; i < 40; i++) fputc('\n', stdout);
+    }
+    fflush(stdout);
+    return SW_NIC;
 }
 
 /* ─────────── prawdziwość i liczby całe ─────────── */
@@ -1597,7 +1624,9 @@ static void sw_start(int argc, char **argv) {
     sw_argc = argc;
     sw_argv = argv;
 #if defined(_WIN32)
-    sw_konsola_utf8();
+    sw_konsola_utf8(); /* ustawi też sw_ekran */
+#else
+    if (isatty(1)) sw_ekran = 1; /* rura á plik zostaią czyste */
 #endif
     srandom((unsigned)time(NULL) ^ (unsigned)getpid());
 }
