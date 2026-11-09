@@ -111,9 +111,10 @@ Niechay dukaty będzie sto.
 Niechay łaska będzie pięć.
 Niechay odwiedziny będzie zero.
 
-Glossa. Zanim obrada pocznie, chorągwie zjawią się z ciemnoty,
-maszyna do pisania zaszczyka wierszem — patrzay y czekay.
+Glossa. Zanim obrada pocznie, gąbka zmie tablicę na czysto,
+potem chorągwie z ciemnoty zjawią się, iak w teatrze — wszystko.
 
+Wymaż ekran.
 Obwieść „”.
 Uczyń zjawienie wiersza z „╔══════════════════════════════════════════════════════════════════╗”.
 Uczyń zjawienie wiersza z „║ ♦ ▬▬▬╪══════════ RZECZPOSPOLITA OBOJGA NARODÓW ═══════════╪▬▬▬ ♦ ║”.
@@ -295,6 +296,7 @@ Zawsze czyń:
 
     A ieśli wybór iest zero:
         Zwiększ dzień.
+        Wymaż ekran.
         Uczyń zjawienie wiersza z „  Gwiazdy mrugaią nad dachem, noc siada na wieży,”.
         Uczyń kropki z „  Co noc przyniesie? Los w kałamarzu leży”.
         Uczyń wieść nocną.
@@ -353,8 +355,10 @@ Rozdział piąty, w którym pada sąd y głosowanie,
 a kanclerz z pisarzem kroczą do końcowego rachowania.
 
 Glossa. Dzień sądu: głosy lecą na szalę, á na horyzoncie weto,
+Glossa. Dzień sądu: głosy lecą na szalę, á na horyzoncie weto,
 jedno słowo — y z ustawy ani okruszka, ani święta.
 
+Wymaż ekran.
 Obwieść.
 Obwieść „═════════════════════════════════════════════════════════════════”.
 Obwieść „  DZIEŃ ÓSMY · GŁOSOWANIE NAD USTAWĄ O PODATKU NA OBRONĘ KRESÓW  ”.
@@ -439,6 +443,7 @@ Ieśli weteran nie iest nicością:
         Zakończ z kodem ieden.
 
 Ieśli zgoda iest większa niż swara:
+    Wymaż ekran.
     Obwieść.
     Uczyń zjawienie wiersza z „  ◆◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◆”.
     Uczyń zjawienie wiersza z „    ▄▄▄    █   █  ████ █   █ █   █  ███   █      ███     ▄▄▄  ”.

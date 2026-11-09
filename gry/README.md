@@ -17,9 +17,11 @@ pisania, po ENTERZE cztery paski ładowania (Zbieranie szlachty z karczem,
 Podkuwanie husarskich koni, Grzanie węgrzyna na zapas, Odkurzanie liberum
 veto) gotują obrady. W grze: noc siada gwiazdami, kropki napięcia przed
 czytaniem głosów, cisza z muchą koło ucha przed «NIE POZWALAM!», dzwony
-zwycięstwa y świeca dogasaiąca w epilogu. Sarmata nie ma zegara, więc czas
-mierzą same pętle: uczynek „zwłoka" kręci się milionami obrotów, á każdy
-obrót to gruchot pustej sakwy.
+zwycięstwa y świeca dogasaiąca w epilogu. Między scenami gąbka wymazuje
+tablicę: rozkaz „Wymaż ekran" czyści terminal przed tytułem, nocą, dniem
+ósmym y finałem uchwały (w rurze á pliku gąbka rozsądnie milcze). Sarmata
+nie ma zegara, więc czas mierzą same pętle: uczynek „zwłoka" kręci się
+milionami obrotów, á każdy obrót to gruchot pustej sakwy.
 
 ## Jak grać
 
