@@ -1,0 +1,6 @@
+# Skrypta i spisywane wyniki liczą się zawsze z jednym «\n», iáko Pan Bóg na Linuxie przykazał.
+*.sar text eol=lf
+*.c text eol=lf
+*.oczekiwane text eol=lf
+*.grzech text eol=lf
+*.wejscie text eol=lf

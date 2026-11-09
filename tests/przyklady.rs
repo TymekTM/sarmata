@@ -123,8 +123,8 @@ fn wyniki(dir: &str) -> usize {
         };
         // Programy mogą coś spisać do plików obok siebie; sprzątamy, by drzewo zostało czyste.
         let _ = std::fs::remove_file(dir.join("raport.txt"));
-        let got = String::from_utf8_lossy(&run.stdout);
-        let want = std::fs::read_to_string(&expected).unwrap();
+        let got = String::from_utf8_lossy(&run.stdout).replace("\r\n", "\n");
+        let want = std::fs::read_to_string(&expected).unwrap().replace("\r\n", "\n");
         if got != want {
             failures.push(format!(
                 "{}:\n--- oczekiwano\n{want}\n--- otrzymano\n{got}",

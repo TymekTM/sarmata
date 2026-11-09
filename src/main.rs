@@ -26,7 +26,7 @@ Vżycie:
   sarmata gramatyka                    wypiſz gramátykę TextMate dla edytorów
   sarmata pomoc                        to obwieſzczenie
 
-Kompilátor C bierze ſię ze zmienney CC (domyślnie «cc»).
+Kompilátor C bierze ſię ze zmienney CC, á ieſli téy nié má — spośród «cc», «gcc», «clang».
 ";
 
 fn main() -> ExitCode {
@@ -181,7 +181,7 @@ fn temp_path(ext: &str) -> PathBuf {
 fn cc(c: &str, out: &Path, opt: &str) -> Result<(), String> {
     let cfile = temp_path(".c");
     std::fs::write(&cfile, c).map_err(|e| format!("Nie vdáło ſię zápiſáć brudnopiſu: {e}"))?;
-    let cc = std::env::var("CC").unwrap_or_else(|_| "cc".to_string());
+    let cc = znajdz_kowala();
     let result = Command::new(&cc)
         .args(["-std=gnu11", opt, "-w", "-o"])
         .arg(out)
@@ -205,6 +205,59 @@ fn cc(c: &str, out: &Path, opt: &str) -> Result<(), String> {
 /// (przez «Zakończ.») — wtedy kończy się i rozmowa, bo każde dalsze zdanie i tak by
 /// przepadło: pismo od nowa puszczane stawałoby zawsze na tym samym «Zakończ.».
 const KONIEC_ROZMOWY: &str = "✠ koniec piſmá w rozmowie ✠\n";
+
+/// Który kowál: ze zmienney CC, á jąli nié — pierwszy z żywych («cc», «gcc», «clang»),
+/// á ná koniec z znanych kowalń, gdzie MinGW á Clang na Windows míeſkaią.
+fn znajdz_kowala() -> String {
+    if let Ok(cc) = std::env::var("CC") {
+        if !cc.trim().is_empty() {
+            return cc;
+        }
+    }
+    for imie in ["cc", "gcc", "clang"] {
+        if Command::new(imie).arg("--version").output().is_ok() {
+            return imie.to_string();
+        }
+    }
+    for kowal in znane_kowalnie() {
+        if Command::new(&kowal).arg("--version").output().is_ok() {
+            return kowal;
+        }
+    }
+    "cc".to_string()
+}
+
+/// Znane kowalnie (Windows): instalacya wingeta (WinLibs), MinGW á LLVM — po ścieżce,
+ /// by stáre powłoki ze ſtarym PATH też kować umiały.
+fn znane_kowalnie() -> Vec<String> {
+    let mut kowalnie = Vec::new();
+    if let Ok(local) = std::env::var("LOCALAPPDATA") {
+        let pakiety = Path::new(&local).join("Microsoft/WinGet/Packages");
+        let mut znalezieni: Vec<_> = std::fs::read_dir(&pakiety)
+            .into_iter()
+            .flatten()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| {
+                p.file_name()
+                    .is_some_and(|n| n.to_string_lossy().starts_with("BrechtSanders.WinLibs"))
+            })
+            .collect();
+        znalezieni.sort();
+        for pakiet in znalezieni {
+            kowalnie.push(pakiet.join("mingw64/bin/gcc.exe").to_string_lossy().into_owned());
+        }
+    }
+    for sciezka in [
+        r"C:\mingw64\bin\gcc.exe",
+        r"C:\msys64\ucrt64\bin\gcc.exe",
+        r"C:\msys64\mingw64\bin\gcc.exe",
+        r"C:\Program Files\LLVM\bin\clang.exe",
+    ] {
+        kowalnie.push(sciezka.to_string());
+    }
+    kowalnie
+}
 
 /// Rozmowa ze skrybą: każde zdanie dopisuje się do pisma, całość kompiluje się
 /// od nowa i pokazuje się tylko to, co przybyło. Zdanie, które zgrzeszyło, przepada.

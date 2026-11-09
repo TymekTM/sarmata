@@ -18,6 +18,96 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
+/* ─────────── Windows (MinGW) — braki POSIX-u ─────────── */
+#if defined(_WIN32)
+#include <direct.h>
+#include <io.h>
+#include <fcntl.h>
+
+__declspec(dllimport) int __stdcall SetConsoleOutputCP(unsigned int);
+__declspec(dllimport) int __stdcall SetConsoleCP(unsigned int);
+/* Konsola po ludzku: UTF-8 á końce wierſzów po iednym «\n», iáko na Linuxie. */
+static void sw_konsola_utf8(void) {
+    _setmode(_fileno(stdout), _O_BINARY);
+    _setmode(_fileno(stderr), _O_BINARY);
+    SetConsoleOutputCP(65001);
+    SetConsoleCP(65001);
+}
+
+#define mkdir(path, mode) _mkdir(path)
+
+/* vasprintf: rozmiar mierzy _vscprintf, potem zwykły vsnprintf. */
+static int sw_vasprintf(char **out, const char *fmt, va_list ap) {
+    int n = _vscprintf(fmt, ap);
+    if (n < 0) { *out = NULL; return -1; }
+    *out = (char *)malloc((size_t)n + 1);
+    if (!*out) return -1;
+    return vsnprintf(*out, (size_t)n + 1, fmt, ap);
+}
+#define vasprintf sw_vasprintf
+
+/* memmem: igła w stogu siana. */
+static void *sw_memmem(const void *h, size_t hl, const void *n, size_t nl) {
+    const char *p = (const char *)h, *q = (const char *)n;
+    if (nl == 0) return (void *)p;
+    if (nl > hl) return NULL;
+    for (size_t i = 0; i + nl <= hl; i++)
+        if (p[i] == q[0] && memcmp(p + i, q, nl) == 0) return (void *)(p + i);
+    return NULL;
+}
+#define memmem sw_memmem
+
+/* getline: wiersz z pliku, razem z końcem, powiększając bufor. */
+static ssize_t sw_getline(char **l, size_t *cap, FILE *f) {
+    size_t n = 0;
+    int c;
+    if (*l == NULL) {
+        *cap = 128;
+        *l = (char *)malloc(*cap);
+        if (!*l) return -1;
+    }
+    for (;;) {
+        c = fgetc(f);
+        if (c == EOF) { if (n == 0) return -1; break; }
+        if (n + 2 > *cap) {
+            *cap *= 2;
+            char *t = (char *)realloc(*l, *cap);
+            if (!t) return -1;
+            *l = t;
+        }
+        (*l)[n++] = (char)c;
+        if (c == '\n') break;
+    }
+    (*l)[n] = 0;
+    return (ssize_t)n;
+}
+#define getline sw_getline
+
+/* random i srandom: xorshift, glibc nie ma tu sobie równych. */
+static unsigned long long sw_rnd = 88172645463325252ULL;
+static long sw_random(void) {
+    sw_rnd ^= sw_rnd << 13;
+    sw_rnd ^= sw_rnd >> 7;
+    sw_rnd ^= sw_rnd << 17;
+    return (long)(sw_rnd & 0x7FFFFFFF);
+}
+static void sw_srandom(unsigned s) {
+    sw_rnd = (unsigned long long)s * 2685821657736338717ULL + 1;
+}
+#define random sw_random
+#define srandom sw_srandom
+
+/* setjmp i longjmp: SEH-owe długie skoki (RtlUnwind) w krzyczą i zawalają program
+ * przy -O2, więc na Windows używamy własnych, czysto rejestrowych, z wbudowanych gcc.
+ * Klątwy zawsze lecą z wartością 1, iáko tego wbudowania żądáią. */
+typedef void *sw_jmp_buf[5];
+#define jmp_buf sw_jmp_buf
+#undef setjmp
+#define setjmp(env) __builtin_setjmp(env)
+#undef longjmp
+#define longjmp(env, val) ((void)(val), __builtin_longjmp(env, 1))
+#endif
+
 typedef enum { T_NIC = 0, T_LICZBA, T_ULAMEK, T_SAD, T_PISMO, T_REGESTR, T_ROD, T_SPIS } Typ;
 
 typedef struct Pismo { size_t len; size_t zn; char d[]; } Pismo;
@@ -1062,7 +1152,7 @@ static W sw_b_wiersze(W p, int L) {
 
 static void sw_zapisz(W tresc, W p, int dopisz, int L) {
     const char *path = sw_sciezka(p, L);
-    FILE *f = fopen(path, dopisz ? "a" : "w");
+    FILE *f = fopen(path, dopisz ? "ab" : "wb");
     if (!f) sw_grzech(L, "Do pliku „%s” piſáć nie podobná.", path);
     Buf b = {0};
     if (tresc.t == T_REGESTR) {
@@ -1499,6 +1589,9 @@ static char **sw_argv;
 static void sw_start(int argc, char **argv) {
     sw_argc = argc;
     sw_argv = argv;
+#if defined(_WIN32)
+    sw_konsola_utf8();
+#endif
     srandom((unsigned)time(NULL) ^ (unsigned)getpid());
 }
 
