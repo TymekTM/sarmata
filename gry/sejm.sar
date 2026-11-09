@@ -1,0 +1,415 @@
+Tytuł: Sejm Roku Pańskiego MDCLII, czyli symulator liberum veto.
+Przedmowa. Anno MDCLII zjechała szlachta do Warszawy,
+tyś mówcą ustawy o podatku, á weto drzemie w ławie.
+
+Powołując się na „../księgi/skarb”.
+
+Ród Szlachcic ma miano, ziemie, wierność, chciwość, upór i mowę.
+Glossa. Szlachcic ma miano y ziemie, serce ma wiernością własną,
+chciwość ma w kieszeni, upór w głowie — mowę ma iasną.
+
+
+Rozdział pierwszy, o uczynkach, które skryba pozapisywała,
+by pasek wierności i łaski rywalnie rysowała.
+
+Uczynek okazanie wierności, przyimuiący przedstawionego:
+    Dla każdego sztabu od iednego do dziesięciu:
+        Ieśli wierność przedstawionego iest co naymniey sztab, Obwieść „▮” nie kończąc wiersza.
+        Inaczey Obwieść „▯” nie kończąc wiersza.
+
+Uczynek okazanie łaski, przyimuiący łaskę:
+    Dla każdego klejnotu od iednego do dziesięciu:
+        Ieśli łaska iest co naymniey klejnot, Obwieść „◆” nie kończąc wiersza.
+        Inaczey Obwieść „◇” nie kończąc wiersza.
+
+Uczynek okazanie ławy, przyimuiący posłów:
+    Obwieść „════════════════════════════════════════════════════════════”.
+    Obwieść „  POSŁOWIE NA SEJMIE”.
+    Obwieść “═════════════════════════════════════════════════════════════”.
+    Dla każdego numeru od iednego do długości posłów:
+        Niechay wypisywany będzie elementem numer z posłów.
+        Obwieść „  {numer}. {miano wypisywanego} ({ziemie wypisywanego}) ” nie kończąc wiersza.
+        Uczyń okazanie wierności z wypisywanego.
+        Obwieść „  upór {upór wypisywanego}” nie kończąc wiersza.
+        Ieśli upór wypisywanego iest co naymniey osiem, Obwieść „  WETO!”. 
+        Inaczey Obwieść „”.
+    Obwieść „──────────────────────────────────────────────────────────────”.
+    Obwieść „  ▮ wierność sprawie · ▯ brak · WETO! = upór co naymniey osiem”.
+
+
+Rozdział wtóry: szlachta zjeżdża — oto ławy się zapełniaią,
+skrytka Skarbu pod stołem na zapisy obrady czekaią.
+
+Przedmowa. Ośmiu panów na ławie — każdy inna ścieżka:
+tego przekonasz słowem, tego dukatem, a tego niczym. Ciesz się, Mości, jeszcze.
+
+Niechay posłowie będą regestrem pustym.
+Dodaj nowego Szlachcica o mianie „Janusz Radziwiłł”, ziemiach równych „Litwa”,
+    wierności równej dwa, chciwości równej czterdzieści, uporze równym dziewięć
+    i mowie równej „Litwa handlem stoi, nie sejmem.” do posłów.
+Dodaj nowego Szlachcica o mianie „Władysław Siciński”, ziemiach równych „Podlasie”,
+    wierności równej pięć, chciwości równej dwadzieścia pięć, uporze równym dziesięć
+    i mowie równej „Nie pozwolę! A nie pozwolę! I jeszcze raz nie pozwolę!” do posłów.
+Dodaj nowego Szlachcica o mianie „Andrzej Fredro”, ziemiach równych „Ruś”,
+    wierności równej pięć, chciwości równej dziesięć, uporze równym siedem
+    i mowie równej „Weto to rozum mowiący, á większość to tłum milczący.” do posłów.
+Dodaj nowego Szlachcica o mianie „Bogusław Leszczyński”, ziemiach równych „Wielkopolska”,
+    wierności równej cztery, chciwości równej trzydzieści, uporze równym sześć
+    i mowie równej „Handel chce pokoju, skarb zaś ciszy.” do posłów.
+Dodaj nowego Szlachcica o mianie „Hieronim Radziejowski”, ziemiach równych „Małopolska”,
+    wierności równej trzy, chciwości równej dwadzieścia, uporze równym osiem
+    i mowie równej „Pomnę krzywdy — á pamięć má to mój herb.” do posłów.
+Dodaj nowego Szlachcica o mianie „Stefan Czarniecki”, ziemiach równych „Ruś”,
+    wierności równej siedem, chciwości równej zero, uporze równym pięć
+    i mowie równej „Nie dam grosza, ale i weta nie rzucę. Woyna nie czeka.” do posłów.
+Dodaj nowego Szlachcica o mianie „Jeremi Wiśniowiecki”, ziemiach równych „Kresy”,
+    wierności równej osiem, chciwości równej piętnaście, uporze równym siedem
+    i mowie równej „Chan pod mūrami, á wy o przywileiach!” do posłów.
+Dodaj nowego Szlachcica o mianie „Piotr Opaliński”, ziemiach równych „Wielkopolska”,
+    wierności równej sześć, chciwości równej dwanaście, uporze równym cztery
+    i mowie równej „Umiarkowanie to cnota… choć nudna.” do posłów.
+
+Glossa. Na start sto dukatów w sakwie, łaska pięć, dzień ieden,
+odwiedziny zero, skrytka też — oto stan, z którym idzieś w bieg ten.
+
+Niechay dzień będzie ieden.
+Niechay dukaty będzie sto.
+Niechay łaska będzie pięć.
+Niechay odwiedziny będzie zero.
+
+Glossa. Skrzynia Skarbu pamięta dzień, dukaty, łaskę, wierności stan,
+kto przerwał, niechaj wraca — skryba go pozna iako własny pan.
+Niechay skrytka będzie otwarciem skarbu „sejm1652”.
+Ieśli długość zbioru skrytki iest większa niż zero:
+    Zapytaj „Zastałeś przerwaną obradę, Mości — wziónąć ią? (tak/nie): ” o odpowiedź.
+    Ieśli odpowiedź iest „tak”:
+        Niechay stary będzie ostatnim elementem zbioru skrytki.
+        Odtąd dzień iest stary pod „dzień”.
+        Odtąd dukaty iest stary pod „dukaty”.
+        Odtąd łaska iest stary pod „łaska”.
+        Dla każdego odczytywanego z posłów:
+            Odtąd wierność odczytywanego iest (stary pod „posłowie”) pod mianem odczytywanego.
+        Obwieść „  Kronika otworzona, dzień {dzień} znów nas woła,”.
+        Obwieść „  Dukatów {dukaty}, łaska {łaska} — gromada siada dokoła.”.
+    Inaczey:
+        Uczyń wymazanie skarbu dla skrytki.
+        Obwieść „  Zaczynamy obrady od nowa, iáko gdyby nic nie było.”.
+
+Obwieść „╔══════════════════════════════════════════════════════════════════╗”.
+Obwieść „║ ♦ ▬▬▬╪══════════ RZECZPOSPOLITA OBOJGA NARODÓW ═══════════╪▬▬▬ ♦ ║”.
+Obwieść „║╪▓▓▓▓▒ █████ █████   ███ █   █       █    ████ █████  ███   ▒▓▓▓▓╪║”.
+Obwieść „║╪▓▓▓▒░ █     █        █  ██ ██      ██   █     █     █   █  ░▒▓▓▓╪║”.
+Obwieść „║╪▓▓▒░  █████ ████     █  █ █ █       █   █████ ████    ██    ░▒▓▓▓║”.
+Obwieść „║╪▓▓▓▒░     █ █     █  █  █   █       █   █   █     █  █     ░▒▓▓▓╪║”.
+Obwieść „║╪▓▓▓▓▒ █████ █████  ██   █   █     █████  ███  ████  █████  ▒▓▓▓▓╪║”.
+Obwieść „║ ◆─────────────────── SYMULATOR LIBERUM VETO ───────────────────◆ ║”.
+Obwieść „╚═◊≈≈═╧══════════════════ ANNO DOMINI 1652 ══════════════════╧═≈≈◊═╝”.
+Obwieść.
+Obwieść „  Roku tysiąc sześćset pięćdziesiąt wtórego,”.
+Obwieść „  Chan pali kresy, nie żałuie niczego.”.
+Obwieść „  Skarb pusty — mysz w nim kwili, nawet dukat niema,”.
+Obwieść „  Tyś mówcą ustawy podatku — ot, cała tema.”.
+Obwieść „  Sześć wierności i więcey — rzecze ZA bez zwłoki,”.
+Obwieść „  Trzy i mniey — PRZECIW, y nie czeka na proroki.”.
+Obwieść „  Upór ośm albo więcey — to groźba weta, panie,”.
+Obwieść „  Siedem dni obrad masz, á ósmego — głosowanie.”.
+Obwieść.
+Uczyń okazanie ławy z posłów.
+
+
+Rozdział trzeci, w którym mija sejmowy dzień za dniem,
+a liberum veto — gdzieś obok — wędruje cieniem.
+
+Zawsze czyń:
+    Obwieść.
+    Obwieść „══════════════════════════════════════════════════════════════”.
+    Obwieść „  SEJM WALNY W WARSZAWIE · DZIEŃ {dzień} OBRAD Z SIEDMIU”.
+    Obwieść “═══════════════════════════════════════════════════════════════”.
+    Obwieść „  Dukaty: {dukaty}”.
+    Obwieść „  Łaska króla:  ” nie kończąc wiersza.
+    Uczyń okazanie łaski z łaski.
+    Obwieść „  {łaska} z dziesięciu”.
+    Obwieść „──────────────────────────────────────────────────────────────”.
+    Obwieść „  Co czynisz, Mości, gdy sejm huczy iak ul w maiu?”.
+    Obwieść „  Wybieray, nim ci zbraknie dukatów w kraiu.”.
+    Obwieść „    1 — Zaiźrzyj w listę posłów, co siedzą na ławie”.
+    Obwieść „    2 — Pomów z którym z panów, á w gadce wszystko prawie”.
+    Obwieść „    3 — Dukaty w rękaw wsuń, nikt nie zapyta czemu”.
+    Obwieść „    4 — Uczta za dwadzieścia: chleb y wino każdemu”.
+    Obwieść „    5 — Audiencya u króla: pokłon, prośba, łaska nowa”.
+    Obwieść „    6 — Zapis obrady w skrzyni pod pieczęcią — gotowa”.
+    Obwieść „    0 — Koniec dnia: zgaś świecę — noc nadeydzie iakowa”.
+    Obwieść „──────────────────────────────────────────────────────────────”.
+    Zapytaj „  Twój wybór (0-6): ” o wybór.
+
+    Ieśli wybór iest nicością:
+        Obwieść „  (Świeca zgasła — obrada umilkła bez słowa.)”.
+        Zakończ z kodem zero.
+
+    Ieśli wybór iest ieden:
+        Uczyń okazanie ławy z posłów.
+
+    A ieśli wybór iest dwa:
+        Uczyń okazanie ławy z posłów.
+        Zapytaj „  Numer pana: ” o numer.
+        Ieśli numer iest liczbą całkowitą i numer iest większy niż zero i numer iest mnieyszy niż dziewięć:
+            Niechay adwersarz będzie elementem numer z posłów.
+            Niechay kość będzie losową liczbą od iednego do sześciu.
+            Obwieść „  {mowa adwersarza}”.
+            Ieśli kość iest sześć:
+                Zmniejsz wierność adwersarza o ieden.
+                Obwieść „  Ślicznieś go obraził — wyniósł się obrażony,”.
+                Obwieść „  Wierność spadła o ieden, kronikarz zdziwiony.”.
+            Inaczey:
+                Ieśli miano adwersarza iest „Andrzej Fredro”:
+                    Zwiększ wierność adwersarza o dwa.
+                    Obwieść „  Fredro rozumie argumenty, kocha dowód iak miód,”.
+                    Obwieść „  Wierność rośnie o dwa — wnet gotów iść za tobą w bród.”.
+                Inaczey:
+                    Zwiększ wierność adwersarza o ieden.
+                    Obwieść „  Pogadaliście iako szlachta z szlachtą, bez fochu,”.
+                    Obwieść „  Wierność rośnie o ieden, á gadka po trochu.”.
+            Ieśli wierność adwersarza iest większa niż dziesięć, Odtąd wierność adwersarza iest dziesięć.
+            Ieśli wierność adwersarza iest mnieysza niż zero, Odtąd wierność adwersarza iest zero.
+        Inaczey:
+            Obwieść „  Takiego numeru na ławie poselskiey nie masz.”.
+
+    A ieśli wybór iest trzy:
+        Uczyń okazanie ławy z posłów.
+        Zapytaj „  Numer pana: ” o numer.
+        Ieśli numer iest liczbą całkowitą i numer iest większy niż zero i numer iest mnieyszy niż dziewięć:
+            Niechay przekupany będzie elementem numer z posłów.
+            Ieśli chciwość przekupanego iest zero:
+                Zmniejsz łaska o dwa.
+                Ieśli łaska iest mnieysza niż zero, Odtąd łaska iest zero.
+                Obwieść „  Czarniecki gromem: Chamie, łapówek nie biorę!”.
+                Obwieść „  A ty stoisz zbladły y tracisz pokorę.”.
+                Obwieść „  Król się dowiedział — łaska spadła o dwa, hola,”.
+                Obwieść „  Chcesz kupić honor? Nie z tey beczki — taka wola.”.
+            Inaczey:
+                Spróbuy:
+                    Ieśli dukaty iest mnieysze niż chciwość przekupanego, rzuć klątwę „Skarbiec pusty iak po elekcyi!”.
+                    Zmniejsz dukaty o chciwość przekupanego.
+                    Zwiększ wierność przekupanego o trzy.
+                    Ieśli wierność przekupanego iest większa niż dziesięć, Odtąd wierność przekupanego iest dziesięć.
+                    Obwieść „  Sak przyięty — {miano przekupanego} łaskawszym patrzy okiem,”.
+                    Obwieść „  Wierność rośnie o trzy, á ustawa nie kłuie już bokiem.”.
+                A w razie biedy, zwaney nedzą:
+                    Obwieść „  Skarbiec pusty iak po elekcyi, mysz w nim tylko bywa,”.
+                    Obwieść „  W sakwie masz {dukaty} dukatów, á nadzieia ledwie żywa.”.
+        Inaczey:
+            Obwieść „  Takiego numeru na ławie poselskiey nie masz.”.
+
+    A ieśli wybór iest cztery:
+        Spróbuy:
+            Ieśli dukaty iest mnieysze niż dwadzieścia, rzuć klątwę „Na ucztę nie stać — gość z pustą sakwą wstydliwy.”.
+            Zmniejsz dukaty o dwadzieścia.
+            Dla każdego biesiadnika z posłów:
+                Zwiększ wierność biesiadnika o ieden.
+                Ieśli wierność biesiadnika iest większa niż dziesięć, Odtąd wierność biesiadnika iest dziesięć.
+            Obwieść „  Uczta się udała: pieczone łabędzie na stole,”.
+            Obwieść „  Węgrzyn płynie rzeką, szlachta wesoło w kole.”.
+            Obwieść „  Muzyka gra tak głośno, iż słychać ią aż w Krakowie,”.
+            Obwieść „  Wszyscy o ieden wiernieysi — dobry sejm, co się zowie.”.
+        A w razie biedy, zwaney nedzą:
+            Obwieść „  Na ucztę nie stać cię — kiesa pusta aż do dołu,”.
+            Obwieść „  Gość z pustą sakwą wstydliwy nie siada do stołu.”.
+
+    A ieśli wybór iest pięć:
+        Ieśli odwiedziny iest zero:
+            Odtąd odwiedziny iest ieden.
+            Zwiększ łaska o ieden.
+            Ieśli łaska iest większa niż dziesięć, Odtąd łaska iest dziesięć.
+            Obwieść „  Król wysłuchał cię cierpliwie, głową kiwnął z daleka,”.
+            Obwieść „  Łaska rośnie o ieden — niech pamięć nie ucieka.”.
+        Inaczey:
+            Obwieść „  Dziś iuż byłeś na zamku; dwór ma swoie prawa,”.
+            Obwieść „  Dwakroć na dzień do króla — nie iest to zabawa.”.
+
+    A ieśli wybór iest sześć:
+        Niechay stany będą spisem pustym.
+        Dla każdego wpisywanego z posłów:
+            Odtąd stany pod mianem wpisywanego iest wierność wpisywanego.
+        Niechay zapis gry będzie spisem, gdzie „dzień” ma dzień, „dukaty” mają dukaty,
+            „łaska” ma łaska i „posłowie” maią stany.
+        Uczyń wniesienie wpisu dla skrytki i zapisu gry.
+        Uczyń zapieczętowanie skarbu dla skrytki.
+        Obwieść „  Obrada pod pieczęcią w skrzyni dębowey ciszy,”.
+        Obwieść „  Zgaś świecę y śpij spokoynie, nikt kroniki nie ruszy.”.
+
+    A ieśli wybór iest zero:
+        Zwiększ dzień.
+        Uczyń wieść nocną.
+        Dla każdego upartego z posłów:
+            Ieśli miano upartego iest „Władysław Siciński”:
+                Zmniejsz wierność upartego o ieden.
+                Ieśli wierność upartego iest mnieysza niż zero, Odtąd wierność upartego iest zero.
+        Obwieść „  Siciński przez noc w uporze zakrzepł iak głaz,”.
+        Obwieść „  Wierność iego o ieden maleie — nikt nie zmieni go wraz.”.
+        Odtąd odwiedziny iest zero.
+        Ieśli dzień iest większy niż siedem, przerwij.
+    Inaczey:
+        Obwieść „  Nie rozumiem, Waszmość. Wybierz ieszcze raz.”.
+
+
+Rozdział czwarty: gdy świeca zgaśnie, przypada czas na noc,
+wieści zaś, co ze świata idą, maią swoją moc.
+
+Uczynek wieść nocna:
+    Niechay kość będzie losową liczbą od iednego do sześciu.
+    Ieśli kość iest ieden:
+        Obwieść „  Nocą Tatarzy pod Lwowem wagi miejskie spalili,”.
+        Obwieść „  Król o podatek woła, by się rychło nie zgubili.”.
+    A ieśli kość iest dwa:
+        Zmniejsz dukaty o dziesięć.
+        Ieśli dukaty iest mnieysze niż zero, Odtąd dukaty iest zero.
+        Obwieść „  W nocy złodziej do skarbca wlazł cichuteńko,”.
+        Obwieść „  Brakuie dziesięciu dukatów — zniknęły bardzo prędko.”.
+    A ieśli kość iest trzy:
+        Zwiększ dukaty o osiem.
+        Obwieść „  Jarmark za miastem huczy, kramarze palą fajki,”.
+        Obwieść „  Sakwa cięższa o osiem dukatów — takie to bajki.”.
+    A ieśli kość iest cztery:
+        Zmniejsz łaska o ieden.
+        Ieśli łaska iest mnieysza niż zero, Odtąd łaska iest zero.
+        Obwieść „  Anonimowy list na ciebie — ktoś pisał go po zmroku,”.
+        Obwieść „  Król czytał ponuro — łaska o ieden spadła w tym roku.”.
+    A ieśli kość iest pięć:
+        Obwieść „  Noc cicho przeszła — wiatr w kominie gra,”.
+        Obwieść „  gdzieś pies szczeknął, ucichł — niech tak noc trwa.”.
+    Inaczey:
+        Dla każdego towarzysza z posłów:
+            Ieśli miano towarzysza iest „Andrzej Fredro”:
+                Zwiększ wierność towarzysza o ieden.
+            Inaczey:
+                Ieśli wierność towarzysza iest mnieysza niż osiem:
+                    Zmniejsz wierność towarzysza o ieden.
+                    Ieśli wierność towarzysza iest mnieysza niż zero, Odtąd wierność towarzysza iest zero.
+        Obwieść „  Fredro wydał traktat o wecie, trzy księgi, sto kart,”.
+        Obwieść „  Wszyscy zasnęli z nudów, wierność spadła — nie żart.”.
+        Obwieść „  Autor zaś rozpływa się w zachwycie nad swym rozumem,”.
+        Obwieść „  Wierność iego rośnie o ieden — sam sobie iest tłumem.”.
+
+
+Rozdział piąty, w którym pada sąd y głosowanie,
+a kanclerz z pisarzem kroczą do końcowego rachowania.
+
+Glossa. Dzień sądu: głosy lecą na szalę, á na horyzoncie weto,
+jedno słowo — y z ustawy ani okruszka, ani święta.
+
+Obwieść.
+Obwieść „═════════════════════════════════════════════════════════════════”.
+Obwieść „  DZIEŃ ÓSMY · GŁOSOWANIE NAD USTAWĄ O PODATKU NA OBRONĘ KRESÓW  ”.
+Obwieść “═════════════════════════════════════════════════════════════════”.
+
+Niechay zgoda będzie zero.
+Niechay swara będzie zero.
+Obwieść „  Kronikarz czyta głosy po kolei:”.
+
+Dla każdego głosującego z posłów:
+    Ieśli wierność głosującego iest co naymniey sześć:
+        Obwieść „    {miano głosującego} — ZA, wąs mu drgnął z ochoty.”.
+        Zwiększ zgodę.
+    A ieśli wierność głosującego nie iest większa niż trzy:
+        Obwieść „    {miano głosującego} — PRZECIW, aż ławy drżą ze złości.”.
+        Zwiększ swarę.
+    Inaczey:
+        Niechay kość będzie losową liczbą od iednego do dziesięciu.
+        Ieśli kość iest mnieysza niż wierność głosującego:
+            Obwieść „    {miano głosującego} — wahał się… á jednak ZA.”.
+            Zwiększ zgodę.
+        Inaczey:
+            Obwieść „    {miano głosującego} — wahał się… á jednak PRZECIW.”.
+            Zwiększ swarę.
+
+Obwieść „──────────────────────────────────────────────────────────────”.
+Obwieść „  ZA        {zgoda}   ” nie kończąc wiersza.
+Dla każdego paska od iednego do zgody, Obwieść „▓” nie kończąc wiersza.
+Obwieść „”.
+Obwieść „  PRZECIW   {swara}   ” nie kończąc wiersza.
+Dla każdego paska od iednego do swary, Obwieść „░” nie kończąc wiersza.
+Obwieść „”.
+
+Niechay weteran będzie nicością.
+Dla każdego podejrzanego z posłów:
+    Ieśli weteran iest nicością:
+        Ieśli wierność podejrzanego nie iest większa niż trzy i upór podejrzanego iest co naymniey osiem:
+            Odtąd weteran iest podejrzanym.
+
+Ieśli weteran nie iest nicością:
+    Obwieść „  ╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱ NIE POZWALAM! ╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲”.
+    Obwieść „  ▓▒░╲           █   █  █████  █████   ███   █           ╱░▒▓”.
+    Obwieść „  ▓▒░╱           █   █  █        █    █   █  █           ╲░▒▓”.
+    Obwieść „  ▓▒░╲           █ █ █  ████     █    █   █  █           ╱░▒▓”.
+    Obwieść „  ▓▒░╱           ██ ██  █        █    █   █              ╲░▒▓”.
+    Obwieść „  ▓▒░╲           █   █  █████    █     ███   █           ╱░▒▓”.
+    Obwieść „  {miano weteran} powstaje z ławy: NIE POZWOLĘ! — woła w grozie,”.
+    Obwieść „  Liberum veto nad sejmem zawisło iak miecz na powrozie.”.
+    Obwieść „  Cisza, iż słychać, iak mucha w atramencie tonie,”.
+    Obwieść „  Pisarz upuścił pióro y płacze w ciemne dłonie.”.
+    Niechay okup będzie chciwość weteran razy dwa.
+    Zapytaj „  Odkupić weto za {okup} dukatów? (tak/nie): ” o odpowiedź.
+    Ieśli odpowiedź iest „tak” i dukaty iest co naymniey okup:
+        Zmniejsz dukaty o okup.
+        Zmniejsz swarę o ieden.
+        Obwieść „  Sak dukatów wręczony — {miano weteran} wstrzymał głos,”.
+        Obwieść „  Sejm odetchnął z ulgą — taniey niż wojna ten los.”.
+        Obwieść „  Weto zdięte — taka złota iest potęga,”.
+        Obwieść „  Honor? O, to iuż zupełnie inna księga.”.
+    Inaczey:
+        Ieśli odpowiedź iest „tak”:
+            Obwieść „  Sakwa lżeysza niż żądanie — okup zbyt wielki dla ciebie,”.
+            Obwieść „  Weto trwa iak głaz, y nic nie pomoże ci w potrzebie.”.
+        Obwieść.
+        Obwieść „  Chorągwie opadły, weto ustawę rozbiło,”.
+        Obwieść „  Sejm rozszedł się bez słowa, iak gdyby go nie było.”.
+        Obwieść „  Kanclerz schował pieczęć, pisarz westchnął cicho,”.
+        Obwieść „  Rzeczpospolita znów ma przed sobą tylko licho.”.
+        Obwieść „  Bywayże zdrów, Waszmość! Amen rzecze kronikarz stary,”.
+        Obwieść „  Niech ci sejm przynosi więcey łaski niż ofiary.”.
+        Zapisz „Sejm Roku Pańskiego 1652 — ustawa rozbita weta.” do pliku „kronika_sejmu.txt”.
+        Zakończ z kodem ieden.
+
+Ieśli zgoda iest większa niż swara:
+    Obwieść.
+    Obwieść „  ◆◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◆”.
+    Obwieść „    ▄▄▄    █   █  ████ █   █ █   █  ███   █      ███     ▄▄▄  ”.
+    Obwieść „   █████   █   █ █     █   █ █   █ █   █  █╱    █   █   █████ ”.
+    Obwieść „   █████   █   █ █     █████ █ █ █ █████ ╱█     █████   █████ ”.
+    Obwieść „  ▀▀▀▀▀▀▀  █   █ █     █   █ ██ ██ █   █  █     █   █  ▀▀▀▀▀▀▀”.
+    Obwieść „     o      ███   ████ █   █ █   █ █   █  █████ █   █     o    ”.
+    Obwieść „  Większość po stronie ustawy! Bije dzwon na wieży,”.
+    Obwieść „  Kanclerz złożył akt pod pieczęć — niech Turek nie zdąży.”.
+    Obwieść „  Hetman wąsy kręci, pisarz piórem skrzypi z uciechy,”.
+    Obwieść „  Sejm uchwalił podatek — Tatarom nie dość pociechy.”.
+    Niechay punktów będzie dukaty.
+    Zwiększ punktów o łaska razy dziesięć.
+    Zwiększ punktów o zgodę razy pięć.
+    Zmniejsz punktów o swarę razy pięć.
+    Niechay tytuł będzie „Poseł Iak Większość”.
+    Ieśli punktów iest co naymniey siedemdziesiąt, Odtąd tytuł będzie „Mąż Stanu”.
+    Ieśli punktów iest co naymniej sto dwadzieścia, Odtąd tytuł będzie „Ociec Oyczyzny”.
+    Obwieść.
+    Obwieść „  Tak dobiegł końca sejm — ustawa przeszła, podatek stoy,”.
+    Obwieść „  W szkatule masz {dukaty} dukatów, á w duszy spokoy.”.
+    Obwieść „  Łaska króla: {łaska} z dziesięciu — hetman wąsem poruszył dumnie,”.
+    Obwieść „  Rachunek chwały: {punktów} — pisał kronikarz rozumnie.”.
+    Obwieść.
+    Obwieść „          ◆ {tytuł} ◆”.
+    Obwieść.
+    Zapisz „Sejm Roku Pańskiego 1652 — ustawa przeszła większością głosów. Mówca: {tytuł}.” do pliku „kronika_sejmu.txt”.
+Inaczey:
+    Obwieść „  Głosy padły przeciw, ustawa legła bez weta —”.
+    Obwieść „  Z upadków naynudnieyszy — ziewa sam poeta.”.
+    Obwieść „  Bywayże zdrów, Waszmość! Amen rzecze kronikarz stary,”.
+    Obwieść „  Niech ci sejm przynosi więcey łaski niż ofiary.”.
+    Zapisz „Sejm Roku Pańskiego 1652 — ustawa odrzucona większością.” do pliku „kronika_sejmu.txt”.
+    Zakończ z kodem ieden.
+
+Obwieść „  Bywayże zdrów, Waszmość! Amen rzecze kronikarz stary,”.
+Obwieść „  Niech ci sejm przynosi więcey łaski niż ofiary.”.
+
+Posłowie. Tu kronika urywa się — Amen niech skryba powie,
+a kto grał, niech pamięta: Rzeczpospolita waży na każdym słowie.
+
+Amen.

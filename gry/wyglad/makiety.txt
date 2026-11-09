@@ -1,0 +1,80 @@
+MAKIETY EKRANÓW · SEJM 1652 — SYMULATOR LIBERUM VETO
+
+Plik poglądowy. Wiersze zaczynające się od ## to opisy (pomiń je).
+Wszystkie pozostałe wiersze mają co najwyżej 68 znaków. Zasady:
+  nagłówki ekranów: pasek ═ (66), sekcje: pasek ─ (66),
+  treść wcięta o 2 spacje, tytuły wielkimi literami.
+Placeholdery <TAK_ZAPISANE> zastępuje gra (w kodzie wstawką).
+Wartości dłuższe niż placeholder trzeba przyciąć lub dopełnić
+spacjami, aby zachować kolumny i limit 68 znaków.
+Znaki: ▮▯ (pasek wierności), ▓░ (głosy), ◆◇ (łaska królewska).
+
+## ============================================================
+## EKRAN A — DZIEŃ OBRAD
+## ============================================================
+══════════════════════════════════════════════════════════════════
+  SEJM WALNY W WARSZAWIE · DZIEŃ <DZIEN> OBRAD
+══════════════════════════════════════════════════════════════════
+  Dukaty:  <DUKATY>        Łaska króla:  ◆◆◆◇◇◇◇◇◇◇  <LASKA>/10
+──────────────────────────────────────────────────────────────────
+  CO UCZYNISZ, MOŚCI PANIE?
+
+    1  Przejrzeć listę posłów
+    2  Przekupić posła dukatami
+    3  Przemówić na sali sejmowej
+    4  Prosić o audiencję u króla
+    5  Poddać uchwałę pod głosowanie
+    0  Opuścić Sejm
+──────────────────────────────────────────────────────────────────
+  Twój wybór (0-5): 
+
+## ============================================================
+## EKRAN B — LISTA POSŁÓW
+## (cyfry Upór i paski ▮▯ to przykład; WETO! gdy Upór >= 8)
+## ============================================================
+══════════════════════════════════════════════════════════════════
+  POSŁOWIE NA SEJMIE · DZIEŃ <DZIEN>
+══════════════════════════════════════════════════════════════════
+  Nr  Miano posła          Ziemie           Wierność    Upór
+──────────────────────────────────────────────────────────────────
+  01  <IMIE>               <ZIEMIE>         ▮▮▮▮▮▮▮▯▯▯  2
+  02  <IMIE>               <ZIEMIE>         ▮▮▮▯▯▯▯▯▯▯  9   WETO!
+  03  <IMIE>               <ZIEMIE>         ▮▮▮▮▮▯▯▯▯▯  5
+  04  <IMIE>               <ZIEMIE>         ▮▮▮▮▮▮▮▮▮▯  1
+  05  <IMIE>               <ZIEMIE>         ▮▮▯▯▯▯▯▯▯▯  8   WETO!
+  06  <IMIE>               <ZIEMIE>         ▮▮▮▮▮▮▯▯▯▯  4
+──────────────────────────────────────────────────────────────────
+  ▮ wierność twojej sprawie   ▯ jej brak   WETO! = upór 8 i więcej
+  Posłów skłonnych do zerwania sejmu: <GROZNYCH>
+
+  Numer posła (1-<LICZBA>) albo 0 = wstecz: 
+
+## ============================================================
+## EKRAN C — WYNIK GŁOSOWANIA
+## (pasek ▓░ ma 30 pól, ▓ = udział tej strony w oddanych głosach)
+## ============================================================
+══════════════════════════════════════════════════════════════════
+  WYNIK GŁOSOWANIA · UCHWAŁA: <UCHWALA>
+══════════════════════════════════════════════════════════════════
+  ZA        <ZA>      ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░░░
+  PRZECIW   <PRZECIW> ▓▓▓▓▓▓▓▓▓░░░░░░░░░░░░░░░░░░░░░
+  WAHA SIĘ  <WAHA>    ▓▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░
+──────────────────────────────────────────────────────────────────
+  Razem głosów: <RAZEM>        Potrzeba do przyjęcia: <PROG>
+
+  WERDYKT:  <WERDYKT>
+  (UCHWAŁA PRZYJĘTA / UCHWAŁA ODRZUCONA / WETO! SEJM ZERWANY)
+  Sprzeciw zgłosił: <IMIE> z ziemi <ZIEMIE>
+──────────────────────────────────────────────────────────────────
+  EPILOG
+
+  Tak dobiegł końca dzień <DZIEN> obrad, <TYTUL>.
+  W szkatule zostało ci <DUKATY> dukatów, a łaska króla
+  wynosi <LASKA> z dziesięciu.
+
+  Potomni zapiszą cię w kronikach jako:
+
+        ◆ <TYTUL> ◆
+
+══════════════════════════════════════════════════════════════════
+  Naciśnij ENTER, by powrócić na salę obrad.

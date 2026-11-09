@@ -305,6 +305,12 @@ Błędy w trakcie działania też mają swoje kazania:
 | `przyklady/skarb.sar` | kronika skarbu karczemnego: pierwsza księga powszechna `księgi/skarb.sar` (baza danych) — wpisy pod pieczęcią, umowa z odpisem pergaminu i zasuwa |
 | `przyklady/dziennik/dziennik.sar` | projekt semestralny: dziennik ocen z menu, plikiem, rodem i rankingiem; ród i uczynki w księdze `żacy.sar` |
 
+## Gry
+
+| Plik | Co czyni |
+|---|---|
+| `gry/sejm.sar` | **Sejm 1652 — Symulator Liberum Veto**: pełnoprawna gra obrad — osiem postaci z statystykami, przekupstwa, uczty, eventy nocne, głosowanie z wetem i jego odkupem, zapis stanu przez księgę `księgi/skarb.sar`, oprawa graficzna w czystym terminalu; patrz `gry/README.md` |
+
 ## Budowa skryby
 
 `src/lexer.rs` (słowa i wcięcia) → `src/powolania.rs` (wplata powołane księgi) → `src/parser.rs` (zdania, miana po rdzeniach) →
