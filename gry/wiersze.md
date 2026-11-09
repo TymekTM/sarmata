@@ -157,3 +157,40 @@ Zastałeś przerwaną obradę, Mości — wziónąć ią? (tak/nie):
 ## SLOT: WCZYTANO
 Kronika otworzona, dzień {dzień} znów nas woła,
 Dukatów {dukaty}, łaska {łaska} — gromada siada dokoła.
+
+## SLOT: TYTUL_WIERSZ
+Rzeczpospolita wzywa na sejm walny, Mości,
+Dzwon bije, aż się trzęsą szlacheckie kości.
+Świeca nad pergaminem wosk po pieczęci roni,
+Pisarz zmarzniętą trzyma pióro w dłoni.
+Husaria pod oknem szumi skrzydłami, stoi,
+Siadaycie, Waszmość — kto krzyknie weto, niech się boi.
+
+## SLOT: TYTUL_PROMPT
+Naciśnij ENTER, by zasiąść na ławie poselskiey...
+
+## SLOT: LADOWANIE
+Zbieranie szlachty z karczem
+Podkuwanie husarskich koni
+Grzanie węgrzyna na zapas
+Odkurzanie liberum veto
+
+## SLOT: NOC_GWIAZDY
+Gwiazdy mrugaią nad dachem, noc siada na wieży,
+Co noc przyniesie? Los w kałamarzu leży.
+
+## SLOT: GLOSOWANIE_POCZATEK
+Kanclerz rozwiia zwoy — głosy czytać nadszedł czas,
+Wąs drży, pióro zamarło — Boże, strzeż nas.
+
+## SLOT: WETO_CISZA
+Cisza. Mucha brzęczy komuś tuż koło ucha,
+Pióro pisarza zawisło — sejm zamarł y słucha.
+
+## SLOT: ZWYCIESTWO_DZWON
+Dzwony grzmią z Wawelu, aż wieża się chwieie,
+Ustawa przeszła! Wróg blednie, szlachta się śmieie.
+
+## SLOT: EPILOG_KONIEC_GRY
+Świeca dogasa, koniec obrad — spać pora,
+Kronikarz zamknął księgę ostatniego wieczora.

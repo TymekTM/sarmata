@@ -12,6 +12,40 @@ chciwość ma w kieszeni, upór w głowie — mowę ma iasną.
 Rozdział pierwszy, o uczynkach, które skryba pozapisywała,
 by pasek wierności i łaski rywalnie rysowała.
 
+Glossa. Oto uczynki widowiskowe: zwłoka wstrzymuje bieg rzeczy,
+pisanie literally litera po literze — maszyna do pisania w świecach.
+
+Uczynek zwłoka, przyimuiąca obrót:
+    Niechay worek będzie zerem.
+    Dla każdego ziarna od iednego do obrotu:
+        Zwiększ worek o ieden.
+    Oddaj worek.
+
+Uczynek pisanie, przyimuiące pismo:
+    Dla każdej litery z pisma:
+        Obwieść literę nie kończąc wiersza.
+        Uczyń zwłokę z 5000000.
+    Obwieść „”.
+
+Uczynek zjawienie wiersza, przyimuiące pismo:
+    Obwieść pismo.
+    Uczyń zwłokę z 25000000.
+
+Uczynek kropki, przyimuiące pismo:
+    Obwieść pismo nie kończąc wiersza.
+    Powtórz trzy razy:
+        Uczyń zwłokę z 20000000.
+        Obwieść „.” nie kończąc wiersza.
+    Obwieść „”.
+
+Uczynek pasek ładowania, przyimuiące pismo:
+    Obwieść „  {pismo}  ” nie kończąc wiersza.
+    Obwieść „[” nie kończąc wiersza.
+    Powtórz dwanaście razy:
+        Uczyń zwłokę z 12000000.
+        Obwieść „█” nie kończąc wiersza.
+    Obwieść „]”.
+
 Uczynek okazanie wierności, przyimuiący przedstawionego:
     Dla każdego sztabu od iednego do dziesięciu:
         Ieśli wierność przedstawionego iest co naymniey sztab, Obwieść „▮” nie kończąc wiersza.
@@ -77,6 +111,38 @@ Niechay dukaty będzie sto.
 Niechay łaska będzie pięć.
 Niechay odwiedziny będzie zero.
 
+Glossa. Zanim obrada pocznie, chorągwie zjawią się z ciemnoty,
+maszyna do pisania zaszczyka wierszem — patrzay y czekay.
+
+Obwieść „”.
+Uczyń zjawienie wiersza z „╔══════════════════════════════════════════════════════════════════╗”.
+Uczyń zjawienie wiersza z „║ ♦ ▬▬▬╪══════════ RZECZPOSPOLITA OBOJGA NARODÓW ═══════════╪▬▬▬ ♦ ║”.
+Uczyń zjawienie wiersza z „║╪▓▓▓▓▒ █████ █████   ███ █   █       █    ████ █████  ███   ▒▓▓▓▓╪║”.
+Uczyń zjawienie wiersza z „║╪▓▓▓▒░ █     █        █  ██ ██      ██   █     █     █   █  ░▒▓▓▓╪║”.
+Uczyń zjawienie wiersza z „║╪▓▓▒░  █████ ████     █  █ █ █       █   █████ ████    ██    ░▒▓▓▓║”.
+Uczyń zjawienie wiersza z „║╪▓▓▓▒░     █ █     █  █  █   █       █   █   █     █  █     ░▒▓▓▓╪║”.
+Uczyń zjawienie wiersza z „║╪▓▓▓▓▒ █████ █████  ██   █   █     █████  ███  ████  █████  ▒▓▓▓▓╪║”.
+Uczyń zjawienie wiersza z „║ ◆─────────────────── SYMULATOR LIBERUM VETO ───────────────────◆ ║”.
+Uczyń zjawienie wiersza z „╚═◊≈≈═╧══════════════════ ANNO DOMINI 1652 ══════════════════╧═≈≈◊═╝”.
+Obwieść „”.
+Uczyń pisanie z „  Rzeczpospolita wzywa na sejm walny, Mości,”.
+Uczyń pisanie z „  Dzwon bije, aż się trzęsą szlacheckie kości.”.
+Uczyń pisanie z „  Świeca nad pergaminem wosk po pieczęci roni,”.
+Uczyń pisanie z „  Pisarz zmarzniętą trzyma pióro w dłoni.”.
+Uczyń pisanie z „  Husaria pod oknem szumi skrzydłami, stoi,”.
+Uczyń pisanie z „  Siadaycie, Waszmość — kto krzyknie weto, niech się boi.”.
+Obwieść „”.
+Uczyń kropki z „  Naciśnij ENTER, by zasiąść na ławie poselskiey”.
+Zapytaj „  » ” o początek.
+Obwieść „”.
+Uczyń pasek ładowania z „Zbieranie szlachty z karczem”.
+Uczyń pasek ładowania z „Podkuwanie husarskich koni”.
+Uczyń pasek ładowania z „Grzanie węgrzyna na zapas”.
+Uczyń pasek ładowania z „Odkurzanie liberum veto”.
+Obwieść „”.
+Uczyń zjawienie wiersza z „  Dzwon bił. Sejm walny początek bierze.”.
+Obwieść „”.
+
 Glossa. Skrzynia Skarbu pamięta dzień, dukaty, łaskę, wierności stan,
 kto przerwał, niechaj wraca — skryba go pozna iako własny pan.
 Niechay skrytka będzie otwarciem skarbu „sejm1652”.
@@ -95,16 +161,6 @@ Ieśli długość zbioru skrytki iest większa niż zero:
         Uczyń wymazanie skarbu dla skrytki.
         Obwieść „  Zaczynamy obrady od nowa, iáko gdyby nic nie było.”.
 
-Obwieść „╔══════════════════════════════════════════════════════════════════╗”.
-Obwieść „║ ♦ ▬▬▬╪══════════ RZECZPOSPOLITA OBOJGA NARODÓW ═══════════╪▬▬▬ ♦ ║”.
-Obwieść „║╪▓▓▓▓▒ █████ █████   ███ █   █       █    ████ █████  ███   ▒▓▓▓▓╪║”.
-Obwieść „║╪▓▓▓▒░ █     █        █  ██ ██      ██   █     █     █   █  ░▒▓▓▓╪║”.
-Obwieść „║╪▓▓▒░  █████ ████     █  █ █ █       █   █████ ████    ██    ░▒▓▓▓║”.
-Obwieść „║╪▓▓▓▒░     █ █     █  █  █   █       █   █   █     █  █     ░▒▓▓▓╪║”.
-Obwieść „║╪▓▓▓▓▒ █████ █████  ██   █   █     █████  ███  ████  █████  ▒▓▓▓▓╪║”.
-Obwieść „║ ◆─────────────────── SYMULATOR LIBERUM VETO ───────────────────◆ ║”.
-Obwieść „╚═◊≈≈═╧══════════════════ ANNO DOMINI 1652 ══════════════════╧═≈≈◊═╝”.
-Obwieść.
 Obwieść „  Roku tysiąc sześćset pięćdziesiąt wtórego,”.
 Obwieść „  Chan pali kresy, nie żałuie niczego.”.
 Obwieść „  Skarb pusty — mysz w nim kwili, nawet dukat niema,”.
@@ -239,6 +295,8 @@ Zawsze czyń:
 
     A ieśli wybór iest zero:
         Zwiększ dzień.
+        Uczyń zjawienie wiersza z „  Gwiazdy mrugaią nad dachem, noc siada na wieży,”.
+        Uczyń kropki z „  Co noc przyniesie? Los w kałamarzu leży”.
         Uczyń wieść nocną.
         Dla każdego upartego z posłów:
             Ieśli miano upartego iest „Władysław Siciński”:
@@ -304,9 +362,12 @@ Obwieść “══════════════════════�
 
 Niechay zgoda będzie zero.
 Niechay swara będzie zero.
+Uczyń zjawienie wiersza z „  Kanclerz rozwiia zwoy — głosy czytać nadszedł czas,”.
+Uczyń kropki z „  Wąs drży, pióro zamarło — Boże, strzeż nas”.
 Obwieść „  Kronikarz czyta głosy po kolei:”.
 
 Dla każdego głosującego z posłów:
+    Uczyń zwłokę z 8000000.
     Ieśli wierność głosującego iest co naymniey sześć:
         Obwieść „    {miano głosującego} — ZA, wąs mu drgnął z ochoty.”.
         Zwiększ zgodę.
@@ -324,10 +385,14 @@ Dla każdego głosującego z posłów:
 
 Obwieść „──────────────────────────────────────────────────────────────”.
 Obwieść „  ZA        {zgoda}   ” nie kończąc wiersza.
-Dla każdego paska od iednego do zgody, Obwieść „▓” nie kończąc wiersza.
+Dla każdego paska od iednego do zgody:
+    Uczyń zwłokę z 15000000.
+    Obwieść „▓” nie kończąc wiersza.
 Obwieść „”.
 Obwieść „  PRZECIW   {swara}   ” nie kończąc wiersza.
-Dla każdego paska od iednego do swary, Obwieść „░” nie kończąc wiersza.
+Dla każdego paska od iednego do swary:
+    Uczyń zwłokę z 15000000.
+    Obwieść „░” nie kończąc wiersza.
 Obwieść „”.
 
 Niechay weteran będzie nicością.
@@ -337,12 +402,15 @@ Dla każdego podejrzanego z posłów:
             Odtąd weteran iest podejrzanym.
 
 Ieśli weteran nie iest nicością:
-    Obwieść „  ╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱ NIE POZWALAM! ╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲”.
-    Obwieść „  ▓▒░╲           █   █  █████  █████   ███   █           ╱░▒▓”.
-    Obwieść „  ▓▒░╱           █   █  █        █    █   █  █           ╲░▒▓”.
-    Obwieść „  ▓▒░╲           █ █ █  ████     █    █   █  █           ╱░▒▓”.
-    Obwieść „  ▓▒░╱           ██ ██  █        █    █   █              ╲░▒▓”.
-    Obwieść „  ▓▒░╲           █   █  █████    █     ███   █           ╱░▒▓”.
+    Uczyń zjawienie wiersza z „  Cisza. Mucha brzęczy komuś tuż koło ucha,”.
+    Uczyń kropki z „  Pióro pisarza zawisło — sejm zamarł y słucha”.
+    Uczyń zwłokę z 40000000.
+    Uczyń zjawienie wiersza z „  ╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱ NIE POZWALAM! ╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲╱╲”.
+    Uczyń zjawienie wiersza z „  ▓▒░╲           █   █  █████  █████   ███   █           ╱░▒▓”.
+    Uczyń zjawienie wiersza z „  ▓▒░╱           █   █  █        █    █   █  █           ╲░▒▓”.
+    Uczyń zjawienie wiersza z „  ▓▒░╲           █ █ █  ████     █    █   █  █           ╱░▒▓”.
+    Uczyń zjawienie wiersza z „  ▓▒░╱           ██ ██  █        █    █   █              ╲░▒▓”.
+    Uczyń zjawienie wiersza z „  ▓▒░╲           █   █  █████    █     ███   █           ╱░▒▓”.
     Obwieść „  {miano weteran} powstaje z ławy: NIE POZWOLĘ! — woła w grozie,”.
     Obwieść „  Liberum veto nad sejmem zawisło iak miecz na powrozie.”.
     Obwieść „  Cisza, iż słychać, iak mucha w atramencie tonie,”.
@@ -372,12 +440,14 @@ Ieśli weteran nie iest nicością:
 
 Ieśli zgoda iest większa niż swara:
     Obwieść.
-    Obwieść „  ◆◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◆”.
-    Obwieść „    ▄▄▄    █   █  ████ █   █ █   █  ███   █      ███     ▄▄▄  ”.
-    Obwieść „   █████   █   █ █     █   █ █   █ █   █  █╱    █   █   █████ ”.
-    Obwieść „   █████   █   █ █     █████ █ █ █ █████ ╱█     █████   █████ ”.
-    Obwieść „  ▀▀▀▀▀▀▀  █   █ █     █   █ ██ ██ █   █  █     █   █  ▀▀▀▀▀▀▀”.
-    Obwieść „     o      ███   ████ █   █ █   █ █   █  █████ █   █     o    ”.
+    Uczyń zjawienie wiersza z „  ◆◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◊~◆”.
+    Uczyń zjawienie wiersza z „    ▄▄▄    █   █  ████ █   █ █   █  ███   █      ███     ▄▄▄  ”.
+    Uczyń zjawienie wiersza z „   █████   █   █ █     █   █ █   █ █   █  █╱    █   █   █████ ”.
+    Uczyń zjawienie wiersza z „   █████   █   █ █     █████ █ █ █ █████ ╱█     █████   █████ ”.
+    Uczyń zjawienie wiersza z „  ▀▀▀▀▀▀▀  █   █ █     █   █ ██ ██ █   █  █     █   █  ▀▀▀▀▀▀▀”.
+    Uczyń zjawienie wiersza z „     o      ███   ████ █   █ █   █ █   █  █████ █   █     o    ”.
+    Uczyń zjawienie wiersza z „  Dzwony grzmią z katedry, aż wieża się chwieie,”.
+    Uczyń zjawienie wiersza z „  Ustawa przeszła! Wróg blednie, szlachta się śmieie.”.
     Obwieść „  Większość po stronie ustawy! Bije dzwon na wieży,”.
     Obwieść „  Kanclerz złożył akt pod pieczęć — niech Turek nie zdąży.”.
     Obwieść „  Hetman wąsy kręci, pisarz piórem skrzypi z uciechy,”.
@@ -406,6 +476,8 @@ Inaczey:
     Zapisz „Sejm Roku Pańskiego 1652 — ustawa odrzucona większością.” do pliku „kronika_sejmu.txt”.
     Zakończ z kodem ieden.
 
+Uczyń zjawienie wiersza z „  Świeca dogasa, koniec obrad — spać pora,”.
+Uczyń zjawienie wiersza z „  Kronikarz zamknął księgę ostatniego wieczora.”.
 Obwieść „  Bywayże zdrów, Waszmość! Amen rzecze kronikarz stary,”.
 Obwieść „  Niech ci sejm przynosi więcey łaski niż ofiary.”.
 
